@@ -67,38 +67,42 @@ main :: proc() {
 		)
 		defer vui_end()
 
-		if vui_button("btn_hello", {20, 80, 300, 40}, "hello").pressed {
-			fmt.printf("pressed\n")
+		{
+			_vuibd_begin("background", {20, 140, 320, 400})
+			_vuibd_draw_rect({32, 32, 12, 255}, {32, 32, 12, 255}, 2)
+			_vuibd_end()
 		}
-		if vui_vbox_scoped("box_test", {20, 140, 300, 400}) {
+		if vui_vbox_scoped("box_test", {20, 140, 320, 400}) {
+			_, box := _vui_peek_current_open_widget()
+			box.layout.padding = {8,6,8,6}
+
 			if vui_button("btn_elem1", {0,0, -1, 30}, "ELEM1").pressed {
 				fmt.printf("you pressed on E1!\n")
 			}
 			if vui_hbox_scoped("line", {0,0, -1, 30}) {
-				{
-					_, box := _vui_peek_current_open_widget()
-					box.layout.padding = { 6, 2, 6, 2 }
-				}
-				if vui_button("spacing_begin", {0,0, -1, 20}, "elema").pressed {
+				_, box := _vui_peek_current_open_widget()
+				box.layout.padding = {8,6,8,6}
+
+				if vui_button("spacing_begin", {0,0, -35, -1}, "elema").pressed {
 					fmt.printf("you pressed on EA!\n")
 				}
-				if vui_button("btn_elemb", {0,0, 80, 60}, "elemb").pressed {
+				if vui_button("btn_elemb", {0,0, -20, 60}, "elemb").pressed {
 					fmt.printf("you pressed on EB!\n")
 				}
-				if vui_button("spacing_end", {0,0, -1, -1}, "another fit").pressed {
+				if vui_button("spacing_end", {0,0, -10, -1}, "another fit").pressed {
 					fmt.printf("you pressed on me!\n")
 				}
 			}
-			if vui_button("do_something", {0,0,60, -40}, "a flex button").pressed {
+			if vui_button("do_something", {0,0,-1, -40}, "a flex button").pressed {
 				fmt.printf("flex button\n")
 			}
-			if vui_hbox_scoped("btn", {0,0, -1, 300}) {
+			if vui_hbox_scoped("btns", {0,0, -1, -1}) {
 				_, box := _vui_peek_current_open_widget()
-				box.layout.spacing = 18
+				box.layout.spacing = 4
 				if vui_button("left", {0,0,-1,-1}, "LEFT").pressed {
 					fmt.printf("left\n")
 				}
-				if vui_button("right", {0,0,-1,-1}, "RIGHT").pressed {
+				if vui_button("right", {0,0,20,-1}, "RIGHT").pressed {
 					fmt.printf("right\n")
 				}
 			}
@@ -108,15 +112,15 @@ main :: proc() {
 
 vui_button :: proc(ulabel: string, rect: Rect, text: string) -> VuiInteract {
 	_vuibd_begin(ulabel, rect)
-	draw_rect := _vuibd_draw_rect({120, 130, 40, 255}, {136, 143, 60, 255}, 4.0)
-	// draw_rect.shadow_color = {0,0,0, 64}
-	// draw_rect.shadow_offset = {2,2}
+	draw_rect := _vuibd_draw_rect({128, 120, 98, 255}, {138, 130, 110, 255}, 4.0)
+	draw_rect.shadow_color = {0,0,0, 64}
+	draw_rect.shadow_offset = {3,3}
 	
-	draw_rect.border_color = {60, 55, 20, 255}
+	draw_rect.border_color = {200,200,200, 255}
 	draw_rect.border_width = 1
 	_vuibd_clickable()
-	draw_text := _vuibd_draw_text({255,0,0,1}, text, 28)
-	draw_text.clip = true
+	draw_text := _vuibd_draw_text({30,20,43,255}, text, 28)
+	// draw_text.clip = true
 	return _vuibd_end()
 }
 
@@ -124,8 +128,8 @@ vui_button :: proc(ulabel: string, rect: Rect, text: string) -> VuiInteract {
 vui_vbox_scoped :: proc(ulabel: string, rect: Rect) -> bool {
 	_vuibd_begin(ulabel, rect)
 	draw_rect := _vuibd_draw_rect({}, {})
-	draw_rect.border_color = {0,100,0, 255}
-	draw_rect.border_width = 1
+	// draw_rect.border_color = {0,100,0, 255}
+	// draw_rect.border_width = 1
 	layout := _vuibd_layout(.Vertical)
 	layout.spacing = 4
 	return true
@@ -134,8 +138,8 @@ vui_vbox_scoped :: proc(ulabel: string, rect: Rect) -> bool {
 vui_hbox_scoped :: proc(ulabel: string, rect: Rect) -> bool {
 	_vuibd_begin(ulabel, rect)
 	draw_rect := _vuibd_draw_rect({}, {})
-	draw_rect.border_color = {0,100,0, 255}
-	draw_rect.border_width = 1
+	// draw_rect.border_color = {0,100,0, 255}
+	// draw_rect.border_width = 1
 	layout := _vuibd_layout(.Horizontal)
 	layout.spacing = 4
 	return true

@@ -92,8 +92,7 @@ VuiWidget_Basic :: struct {
 	ready : bool,
 	baked_rect : Rect,
 
-	using _to_reset : struct {
-
+	using _basic_reset : struct {
 		children_count : int,
 		using _tree : struct {
 			parent, child, next, last : VuiWjtHd,
@@ -146,7 +145,6 @@ VuiWidget_LayoutContainer :: struct {
 
 	using _layout_reset : struct {
 		_used_space : f32,
-		_min_space : f32, // considering the minimun size of each extending elem
 		_fit_elem_count : int,
 	}
 }
@@ -189,7 +187,7 @@ _vuibd_begin :: proc(ulabel: string, rect: Rect) {
 	// }
 	widget.basic.id = id
 	widget.basic.rect = rect
-	widget.basic._to_reset = {}
+	widget.basic._basic_reset = {}
 
 	widget.clickable.enable               = false
 
@@ -267,6 +265,7 @@ __widget_append_child :: proc(parent, child: VuiWjtHd) {
 	}
 	hla.hla_get_pointer(child).basic.parent = parenth
 	parent.basic.last = child
+	parent.basic.children_count += 1
 }
 
 _vui_widget_proc :: proc(widget: VuiWjtHd) -> VuiInteract {
@@ -293,52 +292,38 @@ _vui_widget_proc :: proc(widget: VuiWjtHd) -> VuiInteract {
 			layout := &widget.layout
 			p := child
 
-			switch layout.direction {
-			case .Vertical:
-				layout._used_space += layout.padding.y + layout.padding.w
-			case .Horizontal:
-				layout._used_space += layout.padding.x + layout.padding.z
-			}
-			layout._min_space += layout._used_space
-
 			ctnr_rect := widget.basic.rect
-			extra_space : f32
 			for true {
 				s := hla.hla_get_pointer(p) or_break
 				_layout_widget(p, 0)
 				using s.basic
 				if layout.enable {
-					extra_space = layout.spacing
 					switch layout.direction {
 					case .Vertical:
 						if rect.height < 0 {
 							layout._fit_elem_count += 1
 						} else {
-							layout._used_space += rect.height + layout.spacing
+							layout._used_space += rect.height
 						}
-						layout._min_space += math.abs(rect.height) + layout.spacing
+						ctnr_rect.width = ctnr_rect.width if ctnr_rect.width < 0 else math.max(rect.width + layout.padding.x + layout.padding.z, ctnr_rect.width)
 					case .Horizontal:
 						if rect.width < 0 {
 							layout._fit_elem_count += 1
 						} else {
-							layout._used_space += rect.width + layout.spacing
+							layout._used_space += rect.width
 						}
-						layout._min_space += math.abs(rect.width) + layout.spacing
+						ctnr_rect.height = ctnr_rect.height if ctnr_rect.height < 0 else math.max(rect.height + layout.padding.y + layout.padding.w, ctnr_rect.height)
 					}
-					ctnr_rect.height = ctnr_rect.height if ctnr_rect.height < 0 else math.max(rect.height, ctnr_rect.height + layout.padding.y + layout.padding.w)
-					ctnr_rect.width = ctnr_rect.width if ctnr_rect.width < 0 else math.max(rect.width, ctnr_rect.width + layout.padding.x + layout.padding.z)
 				}
 				p = next
 			}
-			layout._used_space -= extra_space
-			layout._min_space -= extra_space
 
 			widget.basic.rect = ctnr_rect
 		}
 
 		// PASS B: positions
 		if pass == 1 && hla.hla_get_pointer(child) != nil {
-			layout := widget.layout
+			layout := &widget.layout
 			container_rect := widget.basic.rect
 			position :Vec2= {container_rect.x, container_rect.y}
 			if layout.enable {
@@ -349,19 +334,33 @@ _vui_widget_proc :: proc(widget: VuiWjtHd) -> VuiInteract {
 			for true {
 				s := hla.hla_get_pointer(p) or_break
 				using s.basic
-				if widget.layout.enable {
-					switch widget.layout.direction {
+				if layout.enable {
+					switch layout.direction {
 					case .Vertical:
 						rect.x = position.x
 						rect.y = position.y
 						if rect.width < 0 do rect.width = container_rect.width - layout.padding.x - layout.padding.z
-						if rect.height < 0 do rect.height = math.max(-rect.height, container_rect.height - layout._used_space) / f32(layout._fit_elem_count) - layout.spacing
+						available_space := container_rect.height - layout.padding.y - layout.padding.w - layout._used_space - f32(widget.basic.children_count-1) * layout.spacing
+						if rect.height < 0 {
+							if available_space < -rect.height {
+								rect.height = -rect.height
+							} else {
+								rect.height = available_space / f32(layout._fit_elem_count)
+							}
+						}
 						position += {0, rect.height + cast(f32)layout.spacing}
 					case .Horizontal:
 						rect.x = position.x
 						rect.y = position.y
 						if rect.height < 0 do rect.height = container_rect.height - layout.padding.y - layout.padding.w
-						if rect.width < 0 do rect.width = math.max(-rect.width, container_rect.width - layout._used_space) / f32(layout._fit_elem_count) - layout.spacing
+						available_space :f32= container_rect.width - layout.padding.x - layout.padding.z - layout._used_space - f32(widget.basic.children_count-1) * layout.spacing
+						if rect.width < 0 {
+							if available_space < -rect.width {
+								rect.width = -rect.width
+							} else {
+								rect.width = available_space / f32(layout._fit_elem_count)
+							}
+						}
 						position += {rect.width + cast(f32)layout.spacing, 0}
 					}
 				}
@@ -421,7 +420,7 @@ _vui_widget_proc :: proc(widget: VuiWjtHd) -> VuiInteract {
 		if widget.draw_text.enable {
 			using widget.draw_text
 			if clip do nvg.Scissor(vg, rect.x, rect.y, rect.width, rect.height)
-				nvg.FillColor(vg, col_u2f({0,0,0,255}))
+				nvg.FillColor(vg, col_u2f(color))
 				nvg.FontSize(vg, cast(f32)size)
 				nvg.TextAlign(vg, .LEFT, .MIDDLE)
 				asc,des,line_height := nvg.TextMetrics(vg)
