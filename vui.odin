@@ -97,9 +97,7 @@ VuiWidget_Basic :: struct {
 		using _tree : struct {
 			parent, child, next, last : VuiWjtHd,
 		},
-
 		interact : VuiInteract,
-
 	}
 }
 VuiWidget_Clickable :: struct {
@@ -113,23 +111,13 @@ VuiWidget_UpdateCustom :: struct {
 
 VuiWidget_DrawRect :: struct {
 	enable : bool,
-	color, hover_color : Color,
-
-	shadow_color : Color,
-	shadow_offset : Vec2,
-
-	border_color : Color,
-	border_width : f32,
-
-	round : f32,
+	box_normal, box_hover, box_active : BoxStyle,
 }
 
 VuiWidget_DrawText :: struct {
 	enable : bool,
-	size : f64,
 	text : string,
-	color : Color,
-	clip : bool,
+	text_normal, text_hover, text_active : TextStyle,
 }
 VuiWidget_DrawCustom :: struct {
 	enable : bool,
@@ -153,7 +141,6 @@ VuiLayoutDirection :: enum {
 }
 
 VuiInteract :: struct {
-	pressed : bool,
 	clicked : bool,
 }
 
@@ -178,13 +165,14 @@ _vui_get_widget :: proc(id: u64) -> (VuiWjtHd, ^VuiWidget) {
 	}
 	return s, hla.hla_get_pointer(s)
 }
-_vuibd_begin :: proc(ulabel: string, rect: Rect) {
-	id :u64= hash.fnv64(transmute([]byte)ulabel)
+
+
+vuid :: proc(label: string) -> u64 {
+	return hash.fnv64(transmute([]byte)label)
+}
+
+_vuibd_begin :: proc(id: u64, rect: Rect) {
 	h, widget := _vui_get_widget(id)
-	// widget.basic = {
-	// 	id   = id,
-	// 	rect = rect,
-	// }
 	widget.basic.id = id
 	widget.basic.rect = rect
 	widget.basic._basic_reset = {}
@@ -209,21 +197,23 @@ _vuibd_end :: proc() -> VuiInteract {
 	widget := pop(&ctx.widget_stack)
 	return _vui_widget_proc(widget)
 }
-_vuibd_draw_rect :: proc(color: Color, hover_color: Color, round :f32= 0.0) -> ^VuiWidget_DrawRect {
+_vuibd_draw_rect :: proc(normal: BoxStyle) -> ^VuiWidget_DrawRect {
 	_, widget := _vui_peek_current_open_widget()
-	widget.draw_rect.enable = true
-	widget.draw_rect.color = color
-	widget.draw_rect.hover_color = hover_color
-	widget.draw_rect.round = round
+	using widget.draw_rect
+	enable = true
+	box_normal = normal
+	box_hover  = normal
+	box_active = normal
 	return &widget.draw_rect
 }
-_vuibd_draw_text :: proc(color: Color, text: string, size: f64) -> ^VuiWidget_DrawText {
+_vuibd_draw_text :: proc(normal: TextStyle, text: string) -> ^VuiWidget_DrawText {
 	_, widget := _vui_peek_current_open_widget()
 	draw := &widget.draw_text
 	draw.enable = true
-	draw.color = color
-	draw.size = size
 	draw.text = text
+	draw.text_normal = normal
+	draw.text_hover  = normal
+	draw.text_active = normal
 	return draw
 }
 _vuibd_draw_custom :: proc(draw: proc(w: VuiWjtHd), data: rawptr) {
@@ -245,13 +235,84 @@ _vuibd_layout :: proc(direction: VuiLayoutDirection) -> ^VuiWidget_LayoutContain
 	return layout
 }
 
-vui_layout_begin :: proc(ulabel: string, rect: Rect, direction: VuiLayoutDirection, padding: Vec4, color: Color={}) {
-	_vuibd_begin(ulabel, rect)
-	if color != {} do _vuibd_draw_rect(color, color)
-	_vuibd_layout(direction).padding = padding
+BoxStyle :: struct {
+	color : rl.Color,
+	round : f32,
+
+	border_color  : rl.Color,
+	border_width  : f32,
+
+	shadow_color  : rl.Color,
+	shadow_offset : Vec2,
 }
-vui_layout_end :: proc() {
-	_vuibd_end()
+TextStyle :: struct {
+	size : f32,
+	color : rl.Color,
+
+	shadow_color : rl.Color,
+	shadow_offset : Vec2,
+
+	clip : bool,
+}
+
+@(private="file")
+__draw_rect_style :: proc(wjt: ^VuiWidget, using b: BoxStyle) {
+	using wjt.basic
+	if round <= 0 {
+		if shadow_color.a > 0 && shadow_offset != {} {
+			if nvg.FillScoped(vg); true {
+				nvg.FillColor(vg, col_u2f(shadow_color))
+				nvg.Rect(vg, rect.x+shadow_offset.x, rect.y+shadow_offset.y, rect.width, rect.height)
+			}
+		}
+		if nvg.FillScoped(vg); true {
+			nvg.FillColor(vg, col_u2f(color))
+			nvg.Rect(vg, rect.x, rect.y, rect.width, rect.height)
+		}
+		if border_width > 0 && border_color.a > 0 {
+			nvg.StrokeColor(vg, col_u2f(border_color))
+			nvg.Stroke(vg)
+		}
+	} else {
+		if shadow_color.a > 0 && shadow_offset != {} {
+			if nvg.FillScoped(vg); true {
+				nvg.FillColor(vg, col_u2f(shadow_color))
+				nvg.RoundedRect(vg, rect.x+shadow_offset.x, rect.y+shadow_offset.y, rect.width, rect.height, cast(f32)round)
+			}
+		}
+		if nvg.FillScoped(vg); true {
+			nvg.FillColor(vg, col_u2f(color))
+			nvg.RoundedRect(vg, rect.x, rect.y, rect.width, rect.height, cast(f32)round)
+		}
+		if border_width > 0 && border_color.a > 0 {
+			nvg.StrokeColor(vg, col_u2f(border_color))
+			nvg.Stroke(vg)
+		}
+	}
+}
+@(private="file")
+__draw_text_style :: proc(wjt: ^VuiWidget, using t: TextStyle, text: string) {
+	using wjt.basic
+	if clip do nvg.Scissor(vg, rect.x, rect.y, rect.width, rect.height)
+	defer if clip do nvg.ResetScissor(vg)
+
+	nvg.FontSize(vg, cast(f32)size)
+	nvg.TextAlign(vg, .LEFT, .MIDDLE)
+	asc,des,line_height := nvg.TextMetrics(vg)
+	bounds : [4]f32
+	nvg.TextBounds(vg, rect.x, rect.y+cast(f32)size, text, &bounds)
+	text_width := bounds.z-bounds.x
+
+	if shadow_color.a != 0 && shadow_offset != {} {
+		nvg.FillColor(vg, col_u2f(shadow_color))
+		nvg.Text(vg,
+			rect.x + (rect.width - text_width) * 0.5 + shadow_offset.x,
+			rect.y + rect.height*0.5 + shadow_offset.y,
+			text
+		)
+	}
+	nvg.FillColor(vg, col_u2f(color))
+	nvg.Text(vg, rect.x + (rect.width - text_width) * 0.5, rect.y + rect.height*0.5, text)
 }
 
 @(private="file")
@@ -273,13 +334,13 @@ _vui_widget_proc :: proc(widget: VuiWjtHd) -> VuiInteract {
 	widget := hla.hla_get_pointer(widget)
 	using widget.basic
 
-	if widget.clickable.enable && widget.basic.ready {
+	if widget.clickable.enable && widget.basic.ready && widget.basic.id != 0 {
 		inrect := rect_in(widget.basic.baked_rect, rl.GetMousePosition())
 		if inrect {
 			ctx.hot = id
 		}
 		if ctx.hot == id && rl.IsMouseButtonPressed(.LEFT) {
-			interact.pressed = true
+			interact.clicked = true
 		}
 	}
 
@@ -384,51 +445,28 @@ _vui_widget_proc :: proc(widget: VuiWjtHd) -> VuiInteract {
 		if widget.draw_rect.enable {
 			using widget.draw_rect
 			rect := widget.basic.baked_rect
-			c := color if widget.basic.id != ctx.hot else hover_color
-			if round <= 0 {
-				if shadow_color.a > 0 && shadow_offset != {} {
-					if nvg.FillScoped(vg); true {
-						nvg.FillColor(vg, col_u2f(shadow_color))
-						nvg.Rect(vg, rect.x+shadow_offset.x, rect.y+shadow_offset.y, rect.width, rect.height)
-					}
-				}
-				if nvg.FillScoped(vg); true {
-					nvg.FillColor(vg, col_u2f(c))
-					nvg.Rect(vg, rect.x, rect.y, rect.width, rect.height)
-				}
-				if border_width > 0 && border_color.a > 0 {
-					nvg.StrokeColor(vg, col_u2f(border_color))
-					nvg.Stroke(vg)
-				}
+			if widget.basic.id != ctx.hot {
+				__draw_rect_style(widget, box_normal)
 			} else {
-				if shadow_color.a > 0 && shadow_offset != {} {
-					if nvg.FillScoped(vg); true {
-						nvg.FillColor(vg, col_u2f(shadow_color))
-						nvg.RoundedRect(vg, rect.x+shadow_offset.x, rect.y+shadow_offset.y, rect.width, rect.height, cast(f32)round)
-					}
-				}
-				if nvg.FillScoped(vg); true {
-					nvg.FillColor(vg, col_u2f(c))
-					nvg.RoundedRect(vg, rect.x, rect.y, rect.width, rect.height, cast(f32)round)
-				}
-				if border_width > 0 && border_color.a > 0 {
-					nvg.StrokeColor(vg, col_u2f(border_color))
-					nvg.Stroke(vg)
+				if widget.basic.interact.clicked {
+					__draw_rect_style(widget, box_active)
+				} else {
+					__draw_rect_style(widget, box_hover)
 				}
 			}
 		}
+
 		if widget.draw_text.enable {
 			using widget.draw_text
-			if clip do nvg.Scissor(vg, rect.x, rect.y, rect.width, rect.height)
-				nvg.FillColor(vg, col_u2f(color))
-				nvg.FontSize(vg, cast(f32)size)
-				nvg.TextAlign(vg, .LEFT, .MIDDLE)
-				asc,des,line_height := nvg.TextMetrics(vg)
-				bounds : [4]f32
-				nvg.TextBounds(vg, rect.x, rect.y+cast(f32)size, text, &bounds)
-				text_width := bounds.z-bounds.x
-				nvg.Text(vg, rect.x + (rect.width - text_width) * 0.5, rect.y + rect.height*0.5, text)
-			if clip do nvg.ResetScissor(vg)
+			if widget.basic.id != ctx.hot {
+				__draw_text_style(widget, text_normal, text)
+			} else {
+				if widget.basic.interact.clicked {
+					__draw_text_style(widget, text_active, text)
+				} else {
+					__draw_text_style(widget, text_hover, text)
+				}
+			}
 		}
 		if widget.draw_custom.enable {
 			using widget.draw_custom
