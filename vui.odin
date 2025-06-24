@@ -3,6 +3,7 @@ package main
 import "core:fmt"
 import "core:math/linalg"
 import "core:strings"
+import "core:strconv"
 import "core:math"
 import "core:log"
 
@@ -471,6 +472,12 @@ _vui_widget_proc :: proc(widget: VuiWjtHd) -> VuiInteract {
 		if widget.draw_custom.enable {
 			using widget.draw_custom
 			draw(widgeth)
+		}
+		if false {// debug
+			nvg.FontSize(vg, 28)
+			nvg.TextAlign(vg, .LEFT, .TOP)
+			nvg.FillColor(vg, {0,255,0, 255})
+			nvg.Text(vg, rect.x, rect.y, fmt.tprintf("%#x", id))
 		}
 
 		// draw child tree

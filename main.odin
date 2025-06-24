@@ -1,6 +1,7 @@
 package main
 
 import "core:fmt"
+import "core:math/rand"
 import rl "vendor:raylib"
 import nvg "vendor:nanovg"
 
@@ -8,13 +9,16 @@ vg : ^nvg.Context
 
 fontid_default : int
 
+ui_font_size :f32= 28
+
 main :: proc() {
 	rl.SetTargetFPS(60)
+	rl.SetWindowState({.WINDOW_RESIZABLE})
 	rl.InitWindow(800, 600, "Tabro"); defer rl.CloseWindow()
 	vg = draw_init(); defer draw_release(vg)
 
-	// fontid_default = nvg.CreateFont(vg, "xwwk", "LXGWWenKai-Regular.ttf")
-	fontid_default = nvg.CreateFont(vg, "xwwk", "IosevkaTermSlabNerdFontMono-Regular.ttf")
+	fontid_default = nvg.CreateFont(vg, "xwwk", "LXGWWenKai-Regular.ttf")
+	// fontid_default = nvg.CreateFont(vg, "xwwk", "IosevkaTermSlabNerdFontMono-Regular.ttf")
 
 	vui_init(); defer vui_release()
 
@@ -23,6 +27,7 @@ main :: proc() {
 
 	for !rl.WindowShouldClose() {
 		// update
+		scrn_width, scrn_height :f32= cast(f32)rl.GetScreenWidth(), cast(f32)rl.GetScreenHeight()
 		spd :f32= 60.0
 		if rl.IsKeyDown(.J) {
 			if rl.IsKeyDown(.LEFT_SHIFT) {
@@ -43,7 +48,7 @@ main :: proc() {
 		rl.BeginDrawing(); defer rl.EndDrawing()
 		rl.ClearBackground(rl.GRAY)
 
-		nvg.BeginFrame(vg, 800, 600, 1.0)
+		nvg.BeginFrame(vg, scrn_width, scrn_height, 1.0)
 		defer {
 			nvg.Restore(vg)
 			nvg.EndFrame(vg)
@@ -63,7 +68,7 @@ main :: proc() {
 
 		vui_begin(
 			1.0/60.0,
-			{0,0, cast(f32)rl.GetScreenWidth(), cast(f32)rl.GetScreenHeight()}
+			{0,0, scrn_width, scrn_height}
 		)
 		defer vui_end()
 
@@ -72,6 +77,32 @@ main :: proc() {
 			_vuibd_draw_rect({ color= {120,130,200, 255} })
 			_vuibd_end()
 		}
+
+		if vui_hbox_scoped("menu_bar", {0,0, scrn_width, 30}) {
+			_, menu_bar := _vui_peek_current_open_widget()
+			menu_bar.layout.padding = {6,2,6,2}
+			menu_bar.layout.spacing = 4
+			_vuibd_draw_rect({color={0,0,0,120}})
+
+			btn_rect := Rect{0,0,60,-1}
+			if vui_button("menu_btn_file", btn_rect, "File").clicked {
+				fmt.printf("file\n")
+			}
+			if vui_button("menu_btn_edit", btn_rect, "Edit").clicked {
+				fmt.printf("edit\n")
+			}
+			if vui_button("menu_btn_locale", btn_rect, "本地化").clicked {
+				fmt.printf("locale\n")
+			}
+			vui_space({0,0,-1,-1})
+
+			if vui_button("menu_btn_end", btn_rect, "End").clicked {
+				fmt.printf("end\n")
+			}
+		}
+
+
+
 		if vui_vbox_scoped("box_test", {20, 140, 320, 400}) {
 			_, box := _vui_peek_current_open_widget()
 			box.layout.padding = {8,6,8,6}
@@ -79,6 +110,14 @@ main :: proc() {
 			if vui_button("btn_elem1", {0,0, -1, 30}, "ELEM1").clicked {
 				fmt.printf("you pressed on E1!\n")
 			}
+			vui_space({0,0,-1, 18})
+
+			if vui_button("strange_line", {0,0,-1, 12}, "line").clicked {
+				fmt.printf("just a line\n")
+			}
+
+			vui_space({0,0,-1, 18})
+
 			if vui_hbox_scoped("line", {0,0, -1, 30}) {
 				_, box := _vui_peek_current_open_widget()
 				box.layout.padding = {8,6,8,6}
@@ -125,13 +164,13 @@ vui_button :: proc(ulabel: string, rect: Rect, text: string) -> VuiInteract {
 	draw_rect.box_active.color = {240,235,240, 255}
 
 	_vuibd_clickable()
-	draw_text := _vuibd_draw_text({color={30,20,43,255}, size=28, clip=true}, text)
+	draw_text := _vuibd_draw_text({color={30,20,43,255}, size=ui_font_size, clip=true}, text)
 	using draw_text
-	text_hover.size += 2
+	// text_hover.size += 2
 	text_hover.clip = false
 	text_hover.shadow_offset = {2,2}
-	text_hover.shadow_color = {0,0,0, 64}
-	text_active.size += 2
+	text_hover.shadow_color = {255,255,255, 200}
+	// text_active.size += 2
 	text_active.clip = false
 	return _vuibd_end()
 }
@@ -149,4 +188,9 @@ vui_hbox_scoped :: proc(label: string, rect: Rect) -> bool {
 	layout := _vuibd_layout(.Horizontal)
 	layout.spacing = 4
 	return true
+}
+
+vui_space :: proc(rect: Rect) {
+	_vuibd_begin(rand.uint64(), rect)
+	_vuibd_end()
 }
