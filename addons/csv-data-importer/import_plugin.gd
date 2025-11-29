@@ -92,8 +92,10 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 		return FAILED
 
 	var lines = []
+	var max_column = 0
 	while not file.eof_reached():
 		var line = file.get_csv_line(delim)
+		max_column = maxi(line.size(), max_column)
 		if not options.headers or lines.size() > 0:
 			var detected := []
 			for field in line:
@@ -128,6 +130,7 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 			return ERR_PARSE_ERROR
 
 		var headers = lines[0]
+		data.column = headers.size()
 		for i in range(1, lines.size()):
 			var fields = lines[i]
 			if fields.size() > headers.size():
@@ -141,6 +144,7 @@ func _import(source_file, save_path, options, platform_variants, gen_files):
 			data.records.append(dict)
 	else:
 		data.records = lines
+		data.column = max_column
 
 	var filename = save_path + "." + _get_save_extension()
 	var err = ResourceSaver.save(data, filename)

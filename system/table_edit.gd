@@ -8,9 +8,17 @@ class_name TableEdit
 
 var data
 
+var fields : Array[Field]
+
+class Field:
+	var name : String
+	var width : int
+
 func _ready():
+	gridscroller.get_h_scroll_bar().value_changed.connect(\
+			func(v):
+				titlescroller.scroll_horizontal = v)
 	var skills = ResourceLoader.load("res://resources/skills.csv")
-	print("data in the table: ", skills.records)
 	data = skills.records
 	var max_column = 0
 	var row_index = 0
@@ -21,18 +29,16 @@ func _ready():
 			celledit.text = "%s" % cell
 			celledit.bbcode_enabled = true
 			celledit.custom_minimum_size = Vector2(150, 32)
-			if row_index == 0:
+			if row_index == 0: # header
+				var field = Field.new()
+				field.name = cell
+				field.width = 160
+				fields.append(field)
+				celledit.text = "[b]%s[/b]" % cell
 				titleline.add_child(celledit)
-				celledit.text = ""
-				celledit.push_bold()
-				celledit.append_text("%s" % cell)
-				celledit.pop()
 			else:
 				grid.add_child(celledit)
 		if row.size() > max_column:
 			max_column = row.size()
 		row_index += 1
-	grid.columns = max_column
-
-func _process(delta):
-	titlescroller.scroll_horizontal = gridscroller.scroll_horizontal
+	grid.columns = skills.column

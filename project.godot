@@ -15,6 +15,9 @@ run/main_scene="uid://h08p1qskhvv8"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 run/low_processor_mode=true
 run/load_shell_environment=true
+boot_splash/show_image=false
+boot_splash/fullsize=false
+boot_splash/use_filter=false
 config/icon="res://icon.svg"
 
 [editor_plugins]
