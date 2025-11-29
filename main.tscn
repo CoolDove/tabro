@@ -50,20 +50,38 @@ layout_mode = 2
 size_flags_horizontal = 3
 script = ExtResource("1_ig7tw")
 
+[node name="TitleScroller" type="ScrollContainer" parent="Window/Body/EditRegion/TableEdit"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 2
+
+[node name="TitleLine" type="HBoxContainer" parent="Window/Body/EditRegion/TableEdit/TitleScroller"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
 [node name="ScrollContainer" type="ScrollContainer" parent="Window/Body/EditRegion/TableEdit"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 43.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
+size_flags_vertical = 3
+vertical_scroll_mode = 4
 
 [node name="Grid" type="GridContainer" parent="Window/Body/EditRegion/TableEdit/ScrollContainer"]
 custom_minimum_size = Vector2(1200, 0)
 layout_mode = 2
-theme_override_constants/h_separation = 2
-theme_override_constants/v_separation = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
 columns = 6
 
 [node name="Inspector" type="Panel" parent="Window/Body/EditRegion"]
