@@ -126,6 +126,29 @@ func _gui_input(event):
 							)
 		_update_hover()
 
+var _watch_mem_interval : float
+var _watch_mem_pool_count : int
+var _watch_mem_pool_count_last : int
+var _watch_mem_pool_target : int
+func _process(delta):
+	# Watch memory
+	if _watch_mem_interval >= 0:
+		_watch_mem_interval -= delta
+	if _watch_mem_interval < 0:
+		_watch_mem_pool_count = _pool_label.get_child_count()
+		var kill = false
+		if _watch_mem_pool_count >= _watch_mem_pool_count_last:
+			kill = true
+		else:
+			var d = _watch_mem_pool_count_last - _watch_mem_pool_count
+			kill = d < _watch_mem_pool_target * 0.5 and _watch_mem_pool_target < _watch_mem_pool_count
+		if kill:
+			for i in range(0, _watch_mem_pool_target):
+				_pool_label.get_child(-1-i).queue_free()
+		_watch_mem_pool_target = int(_watch_mem_pool_count * 0.5)
+		_watch_mem_pool_count_last = _watch_mem_pool_count
+		_watch_mem_interval = 5
+
 func _update_hover():
 	var grid_mpos = gridscroller.get_local_mouse_position()
 	var new_hover_cell
