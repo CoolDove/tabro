@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://h08p1qskhvv8"]
 
-[ext_resource type="Script" uid="uid://bisark4bcqhly" path="res://system/table_edit.gd" id="1_ig7tw"]
+[ext_resource type="Script" uid="uid://ddhdp2g2hvqlo" path="res://system/main.gd" id="1_0xm2m"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -9,6 +9,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_0xm2m")
 
 [node name="Window" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -47,68 +48,15 @@ item_1/id = 1
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="LeftSide" type="Panel" parent="Window/Body"]
+[node name="MainPanel" type="Panel" parent="Window/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Inspector" type="Panel" parent="Window/Body"]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 
-[node name="LeftPanel" type="VBoxContainer" parent="Window/Body/LeftSide"]
-custom_minimum_size = Vector2(180, 0)
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="EditRegion" type="HSplitContainer" parent="Window/Body"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="TableEdit" type="Panel" parent="Window/Body/EditRegion"]
-custom_minimum_size = Vector2(360, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-script = ExtResource("1_ig7tw")
-
-[node name="TitleScroller" type="ScrollContainer" parent="Window/Body/EditRegion/TableEdit"]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 40.0
-grow_horizontal = 2
-horizontal_scroll_mode = 3
-vertical_scroll_mode = 0
-
-[node name="TitleLine" type="HBoxContainer" parent="Window/Body/EditRegion/TableEdit/TitleScroller"]
-custom_minimum_size = Vector2(0, 36)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 0
-
-[node name="ScrollContainer" type="ScrollContainer" parent="Window/Body/EditRegion/TableEdit"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 38.0
-offset_bottom = -9.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-vertical_scroll_mode = 4
-
-[node name="Grid" type="VBoxContainer" parent="Window/Body/EditRegion/TableEdit/ScrollContainer"]
-custom_minimum_size = Vector2(400, 0)
-layout_mode = 2
-theme_override_constants/separation = 0
-
-[node name="Inspector" type="Panel" parent="Window/Body/EditRegion"]
-custom_minimum_size = Vector2(180, 0)
-layout_mode = 2
-
-[node name="Inspector" type="VBoxContainer" parent="Window/Body/EditRegion/Inspector"]
+[node name="Inspector" type="VBoxContainer" parent="Window/Body/Inspector"]
 custom_minimum_size = Vector2(180, 0)
 layout_mode = 0
 offset_left = 972.0

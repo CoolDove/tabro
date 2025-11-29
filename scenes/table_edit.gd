@@ -6,12 +6,18 @@ class_name TableEdit
 @onready var gridscroller = $ScrollContainer
 @onready var grid = $ScrollContainer/Grid
 
-var data : CsvData
+var data : CsvData:
+	get:
+		return _data
+	set(v):
+		_data = v
+		call_deferred("refresh")
+var _data : CsvData
 
 var cell_height = 32.0
 var fields : Array[Field]
 
-var _pool_label     : Node # Array[Label]
+var _pool_label : Node # Array[Label]
 
 class Field:
 	var name : String
@@ -26,6 +32,10 @@ var visible_begin : int: # include
 var visible_end : int: # exclude
 	get:
 		return ceili((gridscroller.scroll_vertical + gridscroller.size.y) / cell_height)
+
+func _init(csvdata:CsvData=null):
+	data = csvdata
+	pass
 
 func _ready():
 	# TODO: Move this to somewhere else, and remove at the end.
@@ -62,9 +72,12 @@ func _ready():
 	grid.add_child(_virtual_spacing_before, false, INTERNAL_MODE_FRONT)
 	grid.add_child(_virtual_spacing_after, false, INTERNAL_MODE_BACK)
 
-	data = ResourceLoader.load("res://resources/skills.csv") as CsvData
+	# data = ResourceLoader.load("res://resources/skills.csv") as CsvData
 
 func refresh():
+	if data == null:
+		return
+
 	grid.custom_minimum_size.y = cell_height * data.records.size()
 
 	_virtual_spacing_before.custom_minimum_size = Vector2(0, visible_begin * cell_height)

@@ -14,6 +14,6 @@ dest_files=["res://.godot/imported/skills.csv-174c5dda6900e50a437f1eda996fabc7.r
 
 delimiter=0
 headers=false
-detect_numbers=true
-force_float=false
+detect_numbers=false
+force_float=true
 detect_booleans=false

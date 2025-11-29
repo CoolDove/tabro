@@ -1,0 +1,42 @@
+[gd_scene load_steps=2 format=3 uid="uid://ct6caepvtug3e"]
+
+[ext_resource type="Script" uid="uid://bisark4bcqhly" path="res://scenes/table_edit.gd" id="1_qqa4w"]
+
+[node name="TableEdit" type="Panel"]
+custom_minimum_size = Vector2(360, 0)
+size_flags_horizontal = 3
+script = ExtResource("1_qqa4w")
+
+[node name="TitleScroller" type="ScrollContainer" parent="."]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 40.0
+grow_horizontal = 2
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 0
+
+[node name="TitleLine" type="HBoxContainer" parent="TitleScroller"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 38.0
+offset_bottom = -9.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+vertical_scroll_mode = 4
+
+[node name="Grid" type="VBoxContainer" parent="ScrollContainer"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+theme_override_constants/separation = 0

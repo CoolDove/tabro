@@ -26,6 +26,7 @@ enabled=PackedStringArray("res://addons/csv-data-importer/plugin.cfg")
 
 [gui]
 
+theme/default_font_antialiasing=2
 theme/custom="uid://cgpvwb3wp8me1"
 
 [rendering]
