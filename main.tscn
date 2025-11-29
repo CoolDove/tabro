@@ -1,0 +1,78 @@
+[gd_scene load_steps=2 format=3 uid="uid://h08p1qskhvv8"]
+
+[ext_resource type="Script" uid="uid://bisark4bcqhly" path="res://system/table_edit.gd" id="1_ig7tw"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Window" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 1
+
+[node name="MenuBar" type="Panel" parent="Window"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="Body" type="HSplitContainer" parent="Window"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftSide" type="Panel" parent="Window/Body"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+
+[node name="LeftPanel" type="VBoxContainer" parent="Window/Body/LeftSide"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EditRegion" type="HSplitContainer" parent="Window/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TableEdit" type="Panel" parent="Window/Body/EditRegion"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("1_ig7tw")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Window/Body/EditRegion/TableEdit"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+
+[node name="Grid" type="GridContainer" parent="Window/Body/EditRegion/TableEdit/ScrollContainer"]
+custom_minimum_size = Vector2(1200, 0)
+layout_mode = 2
+theme_override_constants/h_separation = 2
+theme_override_constants/v_separation = 2
+columns = 6
+
+[node name="Inspector" type="Panel" parent="Window/Body/EditRegion"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+
+[node name="Inspector" type="VBoxContainer" parent="Window/Body/EditRegion/Inspector"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 0
+offset_left = 972.0
+offset_right = 1152.0
+offset_bottom = 612.0
