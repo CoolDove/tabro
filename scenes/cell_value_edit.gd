@@ -13,6 +13,12 @@ var _canceled : bool
 signal on_edit_finish(value)
 signal on_edit_cancel
 
+func close():
+	var twn = create_tween()
+	twn.parallel().tween_property(self, "modulate", Color(1,1,1, 0), 0.15)
+	twn.parallel().tween_property(self, "size", Vector2(0,0), 0.15)
+	twn.tween_callback(queue_free)
+
 func _init(value: Variant = null, type:CellType=CellType.STRING):
 	self.initial_value = value
 	self.cell_type = type
@@ -26,7 +32,9 @@ func _ready():
 				if _canceled:
 					return
 				on_edit_finish.emit(te.text)
-				queue_free()
+				te.focus_mode = Control.FOCUS_NONE
+				te.editable = false
+				close()
 			)
 			_editor = te
 
@@ -61,8 +69,8 @@ func _gui_input(e):
 		if e is InputEventKey:
 			if e.keycode == KEY_ESCAPE and e.pressed:
 				_canceled = true
-				queue_free()
 				on_edit_cancel.emit()
+				close()
 			elif e.keycode == KEY_ENTER and e.ctrl_pressed:
 				te.release_focus()
 	)

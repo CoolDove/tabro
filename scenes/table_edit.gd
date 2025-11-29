@@ -94,22 +94,26 @@ func _gui_input(event):
 			match event.button_index:
 				MOUSE_BUTTON_WHEEL_UP:
 					var th = Main.instance.theme
-					th.default_font_size = min(th.default_font_size + 1, cell_height)
+					th.default_font_size = min(th.default_font_size + 1, 64)
 					refresh()
 				MOUSE_BUTTON_WHEEL_DOWN:
 					var th = Main.instance.theme
-					th.default_font_size = max(th.default_font_size - 1, 6)
+					th.default_font_size = max(th.default_font_size - 1, 12)
 					refresh()
 		else:
 			match event.button_index:
 				MOUSE_BUTTON_LEFT:
-					if is_hover_cell_valid:
+					if event.is_released() and is_hover_cell_valid:
 						var celledit = _get_celledit_from_hover_cell(hover_cell)
 						var data_row_idx = hover_cell.y + 1
 						var data_col_idx = hover_cell.x
 						if celledit != null:
 							var edit = CellValueEdit.new(data.records[data_row_idx][data_col_idx], CellValueEdit.CellType.STRING) 
-							edit.size = Vector2(480, 220)
+							var twn = create_tween()
+							edit.size = Vector2.ZERO
+							edit.modulate = Color(1,1,1,0)
+							twn.parallel().tween_property(edit, "size", Vector2(480, 220), 0.1)
+							twn.parallel().tween_property(edit, "modulate", Color.WHITE, 0.2)
 							add_child(edit)
 							edit.global_position = celledit.global_position
 							cell_value_edit = edit
@@ -138,7 +142,6 @@ func _update_hover():
 		new_hover_cell = Vector2i(hoverx, hovery)
 	if new_hover_cell == hover_cell:
 		return
-	# var old_hover_celledit = _get_celledit_from_hover_cell(hover_cell)
 	var new_hover_celledit = _get_celledit_from_hover_cell(new_hover_cell)
 	if hover_cell != new_hover_cell:
 		var old_parent = _grid_hover_highlight_mark.get_parent()
@@ -149,6 +152,7 @@ func _update_hover():
 			new_hover_celledit.add_child(_grid_hover_highlight_mark, false, INTERNAL_MODE_BACK)
 		queue_redraw()
 	hover_cell = new_hover_cell
+	await get_tree().process_frame
 
 func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
 	if hover.x < 0 or hover.y < 0 or hover.y > data.records.size() - 2 or hover.x > fields.size() - 1:
@@ -161,6 +165,9 @@ func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
 func refresh():
 	if data == null:
 		return
+
+	var th = Main.instance.theme
+	cell_height = max(th.default_font.get_height(th.default_font_size) + 12, 28)
 
 	grid.custom_minimum_size.y = cell_height * data.records.size()
 
@@ -221,7 +228,6 @@ func refresh():
 			else:
 				celledit.text = "%s" % content
 			celledit.custom_minimum_size = Vector2(fields[f].width, cell_height)
-	cell_height = max(Main.instance.theme.default_font_size + 12, 32)
 
 # You can always call this after either creating a celledit or getting from a pool 
 func _initialize_celledit(celledit: Label):
