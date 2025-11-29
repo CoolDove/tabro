@@ -18,6 +18,9 @@ func _ready():
 				action_open_file()
 			1:
 				print("Not implemented!")
+			3:
+				for c in main_panel.get_children():
+					c.queue_free()
 	)
 	var font = SystemFont.new()
 	font.font_names = ["Verdana", "Cambria"]
@@ -39,7 +42,9 @@ func action_open_file():
 	fdialog.file_selected.connect(func(file):
 		print("select file: %s" % file)
 		open_file(file)
+		fdialog.queue_free()
 	)
+	fdialog.canceled.connect(fdialog.queue_free)
 
 	add_child(fdialog)
 	fdialog.popup_centered_ratio()

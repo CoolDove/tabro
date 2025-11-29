@@ -49,9 +49,6 @@ func _init(csvdata:CsvData=null):
 	pass
 
 func _ready():
-	# TODO: Move this to somewhere else, and remove at the end.
-	_pool_label = Node.new()
-
 	# Add a little block to fit the scroll bar width in body scroll container.
 	var spacing = Control.new()
 	titleline.add_child(spacing, false, INTERNAL_MODE_BACK)
@@ -85,6 +82,12 @@ func _ready():
 
 	# Visual stuff
 	remove_child(_grid_hover_highlight_mark)
+
+func _enter_tree():
+	_pool_label = Node.new()
+
+func _exit_tree():
+	_pool_label.queue_free()
 
 func _gui_input(event):
 	if event is InputEventMouseMotion:

@@ -44,9 +44,11 @@ func _enter_tree():
 
 func _input(e):
 	if e is InputEventMouseButton:
-		var lmpos = get_local_mouse_position()
-		if lmpos.x < 0 or lmpos.y < 0 or lmpos.x >= size.x or lmpos.y >= size.y:
-			_editor.release_focus()
+		if e.pressed:
+			var lmpos = get_local_mouse_position()
+			var safe = 30
+			if lmpos.x < 0 - safe or lmpos.y < 0 - safe or lmpos.x >= size.x + safe or lmpos.y >= size.y + safe:
+				_editor.release_focus()
 
 func _create_text_edit() -> TextEdit:
 	var te = TextEdit.new()
