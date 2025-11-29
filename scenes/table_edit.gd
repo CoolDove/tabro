@@ -92,13 +92,14 @@ func refresh():
 
 	fields.clear()
 	for f in data.records[0]:
-		var celledit = titleline.get_child(fields.size())
+		var celledit = titleline.get_child(fields.size()) as Label
 		var field = Field.new()
 		field.name = f
 		field.width = 160 + hash(f) % 40
 		fields.push_back(field)
 
 		# Set field edit
+		celledit.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		celledit.theme_type_variation = "TableCell"
 		celledit.text = f
 		celledit.custom_minimum_size = Vector2(field.width, titleline.size.y)
@@ -126,6 +127,7 @@ func refresh():
 		for f in range(0, row.size()):
 			var celledit = linectnr.get_child(f)
 			# Set cell edit
+			celledit.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			celledit.theme_type_variation = "TableCell"
 			celledit.text = "%s" % row[f]
 			celledit.set("clip_text", true)

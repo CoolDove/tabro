@@ -15,7 +15,12 @@ func _ready():
 			1:
 				print("Not implemented!")
 	)
-
+	var font = SystemFont.new()
+	font.font_names = ["arial"]
+	theme = ThemeDB.get_project_theme()
+	print("current font: %s" % theme.default_font)
+	theme.default_font = font
+	print("current font: %s" % theme.default_font)
 
 func action_open_file():
 	var fdialog = FileDialog.new()
