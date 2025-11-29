@@ -6,8 +6,10 @@ class_name TableEdit
 @onready var gridscroller = $ScrollContainer
 @onready var grid = $ScrollContainer/Grid
 
-
 @onready var _grid_hover_highlight_mark = $HoverHighlightMark
+
+
+var cell_value_edit : CellValueEdit
 
 var data : CsvData:
 	get:
@@ -24,6 +26,9 @@ var _pool_label : Node # Array[Label]
 
 var select_region : Rect2i
 var hover_cell : Vector2i
+var is_hover_cell_valid :bool:
+	get:
+		return hover_cell.x >= 0 and hover_cell.y >= 0
 
 class Field:
 	var name : String
@@ -81,7 +86,7 @@ func _ready():
 	# Visual stuff
 	remove_child(_grid_hover_highlight_mark)
 
-func _input(event):
+func _gui_input(event):
 	if event is InputEventMouseMotion:
 		_update_hover()
 	elif event is InputEventMouseButton:
@@ -90,18 +95,35 @@ func _input(event):
 				MOUSE_BUTTON_WHEEL_UP:
 					var th = Main.instance.theme
 					th.default_font_size = min(th.default_font_size + 1, cell_height)
+					refresh()
 				MOUSE_BUTTON_WHEEL_DOWN:
 					var th = Main.instance.theme
 					th.default_font_size = max(th.default_font_size - 1, 6)
+					refresh()
+		else:
+			match event.button_index:
+				MOUSE_BUTTON_LEFT:
+					if is_hover_cell_valid:
+						var celledit = _get_celledit_from_hover_cell(hover_cell)
+						var data_row_idx = hover_cell.y + 1
+						var data_col_idx = hover_cell.x
+						if celledit != null:
+							var edit = CellValueEdit.new(data.records[data_row_idx][data_col_idx], CellValueEdit.CellType.STRING) 
+							edit.size = Vector2(480, 220)
+							add_child(edit)
+							edit.global_position = celledit.global_position
+							cell_value_edit = edit
+							edit.on_edit_finish.connect(func(value):
+								data.records[data_row_idx][data_col_idx] = value
+								call_deferred("refresh")
+							)
 		_update_hover()
-
-func _auto_adjust_cellheight():
-	cell_height = max(Main.instance.theme.default_font_size + 4, 32)
 
 func _update_hover():
 	var grid_mpos = gridscroller.get_local_mouse_position()
 	var new_hover_cell
-	if grid_mpos.x < 0 or grid_mpos.y < 0 or grid_mpos.x > gridscroller.size.x or grid_mpos.y > gridscroller.size.y:
+	var is_outside = grid_mpos.x < 0 or grid_mpos.y < 0 or grid_mpos.x > gridscroller.size.x or grid_mpos.y > gridscroller.size.y
+	if is_outside or cell_value_edit != null:
 		new_hover_cell = Vector2i(-1,-1)
 	else:
 		var hovery = floori((grid_mpos.y + gridscroller.scroll_vertical) / cell_height)
@@ -161,8 +183,7 @@ func refresh():
 		fields.push_back(field)
 
 		# Set field edit
-		celledit.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		celledit.theme_type_variation = "TableCell"
+		_initialize_celledit(celledit)
 		celledit.text = f
 		celledit.custom_minimum_size = Vector2(field.width, titleline.size.y)
 
@@ -189,11 +210,28 @@ func refresh():
 		for f in range(0, row.size()):
 			var celledit = linectnr.get_child(f)
 			# Set cell edit
-			celledit.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-			celledit.theme_type_variation = "TableCell"
-			celledit.text = "%s" % row[f]
-			celledit.set("clip_text", true)
+			_initialize_celledit(celledit)
+			var content = row[f]
+			if content is String:
+				var n = content.find("\n")
+				if n != -1:
+					celledit.text = "%s…" % content.substr(0, n)
+				else:
+					celledit.text = content
+			else:
+				celledit.text = "%s" % content
 			celledit.custom_minimum_size = Vector2(fields[f].width, cell_height)
+	cell_height = max(Main.instance.theme.default_font_size + 12, 32)
+
+# You can always call this after either creating a celledit or getting from a pool 
+func _initialize_celledit(celledit: Label):
+	celledit.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	celledit.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	celledit.theme_type_variation = "TableCell"
+	celledit.autowrap_mode = TextServer.AUTOWRAP_OFF
+	celledit.clip_text = true
+	celledit.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	celledit.max_lines_visible = 1
 
 func _recycle_free_line(line: HBoxContainer):
 	for e in line.get_children():

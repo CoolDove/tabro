@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://dhr070wey5wkb"]
+
+[ext_resource type="Script" uid="uid://bft0hs6o6mjvg" path="res://scenes/cell_value_edit.gd" id="1_66hxt"]
+
+[node name="CellValueEdit" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_66hxt")
+metadata/_edit_group_ = true

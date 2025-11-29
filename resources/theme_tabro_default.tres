@@ -1,6 +1,6 @@
-[gd_resource type="Theme" load_steps=3 format=3 uid="uid://cgpvwb3wp8me1"]
+[gd_resource type="Theme" load_steps=6 format=3 uid="uid://cgpvwb3wp8me1"]
 
-[ext_resource type="StyleBox" uid="uid://6arl2ojjxxmf" path="res://resources/default_stylebox_table_cell.tres" id="1_ubs4u"]
+[ext_resource type="StyleBox" uid="uid://6arl2ojjxxmf" path="res://resources/default_stylebox_table_cell.tres" id="1_coj2h"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ubs4u"]
 bg_color = Color(0.4745098, 0.60784316, 0.80784315, 0.2)
@@ -15,11 +15,66 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 anti_aliasing_size = 0.5
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2vkvc"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.14117648, 0.14117648, 0.14117648, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 2
+border_color = Color(1, 1, 1, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_coj2h"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.14117648, 0.14117648, 0.14117648, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v58ho"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.20152658, 0.20152658, 0.20152652, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 2
+border_color = Color(0.41981313, 0.41981313, 0.4198131, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
 [resource]
 HoverHighlightMark/base_type = &"Panel"
 HoverHighlightMark/styles/panel = SubResource("StyleBoxFlat_ubs4u")
-RichTextLabel/styles/focus = ExtResource("1_ubs4u")
-RichTextLabel/styles/normal = ExtResource("1_ubs4u")
+RichTextLabel/styles/focus = ExtResource("1_coj2h")
+RichTextLabel/styles/normal = ExtResource("1_coj2h")
 TableCell/base_type = &"RichTextLabel"
-TableCell/styles/focus = ExtResource("1_ubs4u")
-TableCell/styles/normal = ExtResource("1_ubs4u")
+TableCell/styles/focus = ExtResource("1_coj2h")
+TableCell/styles/normal = ExtResource("1_coj2h")
+TextEdit/colors/selection_color = Color(0.27640644, 0.54240066, 0.63761353, 1)
+TextEdit/styles/focus = SubResource("StyleBoxFlat_2vkvc")
+TextEdit/styles/normal = SubResource("StyleBoxFlat_coj2h")
+TextEdit/styles/read_only = SubResource("StyleBoxFlat_v58ho")

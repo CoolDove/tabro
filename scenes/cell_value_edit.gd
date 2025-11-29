@@ -1,0 +1,69 @@
+extends Control
+class_name CellValueEdit
+
+enum CellType { STRING }
+
+@export var initial_value : Variant
+@export var cell_type : CellType
+
+var _editor : Control
+
+var _canceled : bool
+
+signal on_edit_finish(value)
+signal on_edit_cancel
+
+func _init(value: Variant = null, type:CellType=CellType.STRING):
+	self.initial_value = value
+	self.cell_type = type
+
+func _ready():
+	match cell_type:
+		CellType.STRING:
+			var te = _create_text_edit()
+			te.call_deferred("grab_focus")
+			te.focus_exited.connect(func():
+				if _canceled:
+					return
+				on_edit_finish.emit(te.text)
+				queue_free()
+			)
+			_editor = te
+
+func _enter_tree():
+	if _editor != null:
+		_editor.call_deferred("grab_focus")
+
+func _input(e):
+	if e is InputEventMouseButton:
+		var lmpos = get_local_mouse_position()
+		if lmpos.x < 0 or lmpos.y < 0 or lmpos.x >= size.x or lmpos.y >= size.y:
+			_editor.release_focus()
+
+func _create_text_edit() -> TextEdit:
+	var te = TextEdit.new()
+	if initial_value is String:
+		te.text = initial_value
+	te.set_anchors_preset(PRESET_FULL_RECT)
+	add_child(te)
+	te.call_deferred("grab_focus")
+	var script = GDScript.new()
+	script.source_code = """
+extends TextEdit
+signal gui_event_handle(e)
+func _gui_input(e):
+	gui_event_handle.emit(e)
+"""
+
+	script.reload()
+	te.set_script(script)
+	te.connect("gui_event_handle", func(e: InputEvent):
+		if e is InputEventKey:
+			if e.keycode == KEY_ESCAPE and e.pressed:
+				_canceled = true
+				queue_free()
+				on_edit_cancel.emit()
+			elif e.keycode == KEY_ENTER and e.ctrl_pressed:
+				te.release_focus()
+	)
+	return te
