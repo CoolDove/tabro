@@ -97,16 +97,20 @@ func _input(event):
 
 func _update_hover():
 	var grid_mpos = gridscroller.get_local_mouse_position()
-	var hovery = floori((grid_mpos.y + gridscroller.scroll_vertical) / cell_height)
-	var _hoverxpx = int(grid_mpos.x + gridscroller.scroll_horizontal)
-	var hoverx = 0
-	for fieldidx in range(0, fields.size()):
-		hoverx = fieldidx
-		var field = fields[fieldidx]
-		if _hoverxpx < field.width:
-			break
-		_hoverxpx -= field.width
-	var new_hover_cell = Vector2i(hoverx, hovery)
+	var new_hover_cell
+	if grid_mpos.x >= 0 and grid_mpos.y >= 0:
+		var hovery = floori((grid_mpos.y + gridscroller.scroll_vertical) / cell_height)
+		var _hoverxpx = int(grid_mpos.x + gridscroller.scroll_horizontal)
+		var hoverx = 0
+		for fieldidx in range(0, fields.size()):
+			hoverx = fieldidx
+			var field = fields[fieldidx]
+			if _hoverxpx < field.width:
+				break
+			_hoverxpx -= field.width
+		new_hover_cell = Vector2i(hoverx, hovery)
+	else:
+		new_hover_cell = Vector2i(-1,-1)
 	if new_hover_cell == hover_cell:
 		return
 	# var old_hover_celledit = _get_celledit_from_hover_cell(hover_cell)
@@ -124,7 +128,8 @@ func _update_hover():
 func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
 	if hover.x < 0 or hover.y < 0 or hover.y > data.records.size() - 2 or hover.x > fields.size() - 1:
 		return null
-	return grid.get_child(hover.y - visible_begin).get_child(hover.x) as Control
+	var linectnr = grid.get_child(hover.y - visible_begin)
+	return linectnr.get_child(hover.x) as Control
 
 func refresh():
 	if data == null:
