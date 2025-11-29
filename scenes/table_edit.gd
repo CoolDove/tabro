@@ -6,6 +6,9 @@ class_name TableEdit
 @onready var gridscroller = $ScrollContainer
 @onready var grid = $ScrollContainer/Grid
 
+
+@onready var _grid_hover_highlight_mark = $HoverHighlightMark
+
 var data : CsvData:
 	get:
 		return _data
@@ -18,6 +21,9 @@ var cell_height = 32.0
 var fields : Array[Field]
 
 var _pool_label : Node # Array[Label]
+
+var select_region : Rect2i
+var hover_cell : Vector2i
 
 class Field:
 	var name : String
@@ -72,7 +78,53 @@ func _ready():
 	grid.add_child(_virtual_spacing_before, false, INTERNAL_MODE_FRONT)
 	grid.add_child(_virtual_spacing_after, false, INTERNAL_MODE_BACK)
 
-	# data = ResourceLoader.load("res://resources/skills.csv") as CsvData
+	# Visual stuff
+	remove_child(_grid_hover_highlight_mark)
+
+func _input(event):
+	if event is InputEventMouseMotion:
+		_update_hover()
+	elif event is InputEventMouseButton:
+		if Input.is_key_pressed(KEY_CTRL):
+			match event.button_index:
+				MOUSE_BUTTON_WHEEL_UP:
+					var th = Main.instance.theme
+					th.default_font_size = min(th.default_font_size + 1, cell_height)
+				MOUSE_BUTTON_WHEEL_DOWN:
+					var th = Main.instance.theme
+					th.default_font_size = max(th.default_font_size - 1, 6)
+		_update_hover()
+
+func _update_hover():
+	var grid_mpos = gridscroller.get_local_mouse_position()
+	var hovery = floori((grid_mpos.y + gridscroller.scroll_vertical) / cell_height)
+	var _hoverxpx = int(grid_mpos.x + gridscroller.scroll_horizontal)
+	var hoverx = 0
+	for fieldidx in range(0, fields.size()):
+		hoverx = fieldidx
+		var field = fields[fieldidx]
+		if _hoverxpx < field.width:
+			break
+		_hoverxpx -= field.width
+	var new_hover_cell = Vector2i(hoverx, hovery)
+	if new_hover_cell == hover_cell:
+		return
+	# var old_hover_celledit = _get_celledit_from_hover_cell(hover_cell)
+	var new_hover_celledit = _get_celledit_from_hover_cell(new_hover_cell)
+	if hover_cell != new_hover_cell:
+		var old_parent = _grid_hover_highlight_mark.get_parent()
+		if old_parent != null:
+			old_parent.remove_child(_grid_hover_highlight_mark)
+		if new_hover_celledit != null:
+			_grid_hover_highlight_mark.set_anchors_preset(PRESET_FULL_RECT)
+			new_hover_celledit.add_child(_grid_hover_highlight_mark, false, INTERNAL_MODE_BACK)
+		queue_redraw()
+	hover_cell = new_hover_cell
+
+func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
+	if hover.x < 0 or hover.y < 0 or hover.y > data.records.size() - 2 or hover.x > fields.size() - 1:
+		return null
+	return grid.get_child(hover.y - visible_begin).get_child(hover.x) as Control
 
 func refresh():
 	if data == null:

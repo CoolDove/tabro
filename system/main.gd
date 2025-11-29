@@ -1,4 +1,5 @@
 extends Control
+class_name Main
 
 @onready var menu = $Window/MenuBar
 @onready var popupm_file = $Window/MenuBar/PM_File
@@ -7,7 +8,10 @@ extends Control
 
 var _TableEdit = preload("res://scenes/table_edit.tscn")
 
+static var instance : Main
+
 func _ready():
+	instance = self
 	popupm_file.id_pressed.connect(func(id):
 		match id:
 			0:
@@ -16,11 +20,13 @@ func _ready():
 				print("Not implemented!")
 	)
 	var font = SystemFont.new()
-	font.font_names = ["arial"]
+	font.font_names = ["Verdana", "Cambria"]
 	theme = ThemeDB.get_project_theme()
-	print("current font: %s" % theme.default_font)
 	theme.default_font = font
-	print("current font: %s" % theme.default_font)
+	theme.default_font_size = 22
+
+	await get_tree().process_frame
+	open_file("res://resources/skills.csv")
 
 func action_open_file():
 	var fdialog = FileDialog.new()
@@ -32,31 +38,17 @@ func action_open_file():
 
 	fdialog.file_selected.connect(func(file):
 		print("select file: %s" % file)
-		var csvdata = CsvReader.load(file)
-		for c in main_panel.get_children():
-			c.queue_free()
-		var table_edit = _TableEdit.instantiate() as TableEdit
-		table_edit.data = csvdata
-		table_edit.set_anchors_preset(PRESET_FULL_RECT)
-		main_panel.add_child(table_edit)
+		open_file(file)
 	)
 
 	add_child(fdialog)
 	fdialog.popup_centered_ratio()
-# Some useless code
-# func _show_menu_at_mouse_pos():
-# 	NativeMenu.popup(menu, DisplayServer.mouse_get_position())
-# 
-# func _menu_callable(id):
-# 	if id == "MENU_OPEN":
-# 		print("press open")
-# 	if id == "MENU_SAVE":
-# 		print("press save")
-# 
-# func _enter_tree():
-# 	menu = NativeMenu.create_menu()
-# 	NativeMenu.add_item(menu, "Open", _menu_callable, Callable(), "MENU_OPEN")
-# 	NativeMenu.add_item(menu, "Save", _menu_callable, Callable(), "MENU_SAVE")
-# 
-# func _exit_tree():
-# 	NativeMenu.free_menu(menu)
+
+func open_file(filepath: String):
+	var csvdata = CsvReader.load(filepath)
+	for c in main_panel.get_children():
+		c.queue_free()
+	var table_edit = _TableEdit.instantiate() as TableEdit
+	table_edit.data = csvdata
+	table_edit.set_anchors_preset(PRESET_FULL_RECT)
+	main_panel.add_child(table_edit)

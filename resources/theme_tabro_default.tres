@@ -1,0 +1,25 @@
+[gd_resource type="Theme" load_steps=3 format=3 uid="uid://cgpvwb3wp8me1"]
+
+[ext_resource type="StyleBox" uid="uid://6arl2ojjxxmf" path="res://resources/default_stylebox_table_cell.tres" id="1_ubs4u"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ubs4u"]
+bg_color = Color(0.4745098, 0.60784316, 0.80784315, 0.2)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0.7235019, 0.6565464, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+anti_aliasing_size = 0.5
+
+[resource]
+HoverHighlightMark/base_type = &"Panel"
+HoverHighlightMark/styles/panel = SubResource("StyleBoxFlat_ubs4u")
+RichTextLabel/styles/focus = ExtResource("1_ubs4u")
+RichTextLabel/styles/normal = ExtResource("1_ubs4u")
+TableCell/base_type = &"RichTextLabel"
+TableCell/styles/focus = ExtResource("1_ubs4u")
+TableCell/styles/normal = ExtResource("1_ubs4u")
