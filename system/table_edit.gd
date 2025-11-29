@@ -11,8 +11,7 @@ var data : CsvData
 var cell_height = 32.0
 var fields : Array[Field]
 
-var _pool_label     : Array[Label]
-var _pool_richlabel : Array[RichTextLabel]
+var _pool_label     : Node # Array[Label]
 
 class Field:
 	var name : String
@@ -23,12 +22,15 @@ var _virtual_spacing_after  : Control
 
 var visible_begin : int: # include
 	get:
-		return floori(gridscroller.scroll_vertical / cell_height) - 1
+		return floori(gridscroller.scroll_vertical / cell_height)
 var visible_end : int: # exclude
 	get:
 		return ceili((gridscroller.scroll_vertical + gridscroller.size.y) / cell_height)
 
 func _ready():
+	# TODO: Move this to somewhere else, and remove at the end.
+	_pool_label = Node.new()
+
 	# Add a little block to fit the scroll bar width in body scroll container.
 	var spacing = Control.new()
 	titleline.add_child(spacing, false, INTERNAL_MODE_BACK)
@@ -63,8 +65,10 @@ func _ready():
 	data = ResourceLoader.load("res://resources/skills.csv") as CsvData
 
 func refresh():
-	print("refresh")
 	grid.custom_minimum_size.y = cell_height * data.records.size()
+
+	_virtual_spacing_before.custom_minimum_size = Vector2(0, visible_begin * cell_height)
+	_virtual_spacing_after.custom_minimum_size  = Vector2(0, int(gridscroller.size.y * 0.4))
 
 	for i in range(0, data.records[0].size() - titleline.get_child_count()):
 		titleline.add_child(_get_cell_control_label())
@@ -84,13 +88,16 @@ func refresh():
 		# Set field edit
 		celledit.theme_type_variation = "TableCell"
 		celledit.text = f
-		celledit.custom_minimum_size = Vector2(field.width, cell_height)
+		celledit.custom_minimum_size = Vector2(field.width, titleline.size.y)
 
-	for i in range(0, data.records.size() - 1 - grid.get_child_count()):
+	var visible_record_count = min(\
+			visible_end - visible_begin, data.records.size() - 1 - visible_begin
+	)
+	for i in range(0, visible_record_count - grid.get_child_count()):
 		var line = HBoxContainer.new()
 		line.add_theme_constant_override("separation", 0)
 		grid.add_child(line)
-	for i in range(0, grid.get_child_count() - data.records.size() - 1):
+	for i in range(0, grid.get_child_count() - visible_record_count):
 		_recycle_free_line(grid.get_child(-1))
 
 	var field_count = fields.size()
@@ -100,9 +107,9 @@ func refresh():
 		for f in range(0, line.get_child_count() - field_count):
 			line.remove_child(line.get_child(-1))
 
-	for r in range(1, data.records.size()):
+	for r in range(visible_begin+1, visible_record_count + visible_begin + 1):
 		var row = data.records[r]
-		var linectnr = grid.get_child(r-1)
+		var linectnr = grid.get_child(r - (visible_begin+1))
 		for f in range(0, row.size()):
 			var celledit = linectnr.get_child(f)
 			# Set cell edit
@@ -112,26 +119,21 @@ func refresh():
 			celledit.custom_minimum_size = Vector2(fields[f].width, cell_height)
 
 func _recycle_free_line(line: HBoxContainer):
-	for e in line:
+	for e in line.get_children():
+		line.remove_child(e)
 		if e is Label:
 			_recycle_cell_control_label(e)
 		else:
-			if e is RichTextLabel:
-				_recycle_cell_control_richlabel(e)
-			else:
-				e.queue_free()
+			e.queue_free()
+	line.get_parent().remove_child(line)
 	line.queue_free()
 
 func _get_cell_control_label() -> Label:
-	var result = _pool_label.pop_back()
-	return result if result != null else Label.new()
+	if _pool_label.get_child_count() == 0:
+		return Label.new()
+	var result = _pool_label.get_child(-1)
+	_pool_label.remove_child(result)
+	return result
 
 func _recycle_cell_control_label(lb: Label):
-	_pool_label.push_back(lb)
-
-func _get_cell_control_richlabel() -> RichTextLabel:
-	var result = _pool_richlabel.pop_back()
-	return result if result != null else RichTextLabel.new()
-
-func _recycle_cell_control_richlabel(lb: RichTextLabel):
-	_pool_richlabel.push_back(lb)
+	_pool_label.add_child(lb)
