@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=14 format=3 uid="uid://cgpvwb3wp8me1"]
+[gd_resource type="Theme" load_steps=15 format=3 uid="uid://cgpvwb3wp8me1"]
 
 [ext_resource type="StyleBox" uid="uid://6arl2ojjxxmf" path="res://resources/default_stylebox_table_cell.tres" id="1_coj2h"]
 
@@ -70,6 +70,12 @@ anti_aliasing_size = 0.5
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_idseb"]
 bg_color = Color(0.99607843, 0.99607843, 0.99607843, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_coj2h"]
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2vkvc"]
 content_margin_left = 6.0
@@ -155,8 +161,8 @@ RichTextLabel/styles/focus = ExtResource("1_coj2h")
 RichTextLabel/styles/normal = ExtResource("1_coj2h")
 TableCell/base_type = &"Label"
 TableCell/colors/font_color = Color(0, 0, 0, 1)
-TableCell/styles/focus = ExtResource("1_coj2h")
-TableCell/styles/normal = ExtResource("1_coj2h")
+TableCell/styles/focus = SubResource("StyleBoxEmpty_coj2h")
+TableCell/styles/normal = SubResource("StyleBoxEmpty_coj2h")
 TextEdit/colors/caret_color = Color(0.17641887, 0.17641926, 0.1764189, 1)
 TextEdit/colors/font_color = Color(0, 0, 0, 1)
 TextEdit/colors/selection_color = Color(0.27640644, 0.54240066, 0.63761353, 1)

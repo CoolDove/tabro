@@ -80,6 +80,25 @@ func _ready():
 	grid.add_child(_virtual_spacing_before, false, INTERNAL_MODE_FRONT)
 	grid.add_child(_virtual_spacing_after, false, INTERNAL_MODE_BACK)
 
+	grid.draw.connect(func ():
+		var grid_size = grid.size
+		var grid_color = Color.BLACK
+		for i in range(visible_begin, min(visible_end, data.records.size()) + 1):
+			var y = i * cell_height
+			grid.draw_line(Vector2(0,y), Vector2(grid_size.x, y), grid_color)
+		var x = 0
+		var draw_cell = null
+		grid.draw_line(Vector2(x, 0), Vector2(x, grid_size.y), grid_color)
+		for fidx in range(0, fields.size()):
+			var f = fields[fidx]
+			if is_hover_cell_valid and hover_cell.x == fidx:
+				draw_cell = Rect2(Vector2(x, hover_cell.y * cell_height), Vector2(f.width, cell_height));
+			x += f.width
+			grid.draw_line(Vector2(x, 0), Vector2(x, grid_size.y), grid_color)
+		if draw_cell is Rect2:
+			grid.draw_rect(draw_cell, Color(0x00c2c1ff), false, 3)
+	)
+
 	# Visual stuff
 	remove_child(_grid_hover_highlight_mark)
 
@@ -116,10 +135,10 @@ func _gui_input(event):
 							var twn = create_tween()
 							edit.size = Vector2(fieldinfo.width, cell_height)
 							edit.modulate = Color(1,1,1,0)
-							twn.parallel().tween_property(edit, "size", Vector2(fieldinfo.width, 220), 0.1)
+							twn.parallel().tween_property(edit, "size", Vector2(fieldinfo.width+1, 220), 0.1)
 							twn.parallel().tween_property(edit, "modulate", Color.WHITE, 0.2)
 							add_child(edit)
-							edit.global_position = celledit.global_position
+							edit.global_position = celledit.global_position + Vector2(-1, -1)
 							cell_value_edit = edit
 							edit.on_edit_finish.connect(func(value):
 								data.records[data_row_idx][data_col_idx] = value
@@ -176,10 +195,10 @@ func _update_hover():
 			old_parent.remove_child(_grid_hover_highlight_mark)
 		if new_hover_celledit != null:
 			_grid_hover_highlight_mark.set_anchors_preset(PRESET_FULL_RECT)
-			new_hover_celledit.add_child(_grid_hover_highlight_mark, false, INTERNAL_MODE_BACK)
+			# new_hover_celledit.add_child(_grid_hover_highlight_mark, false, INTERNAL_MODE_BACK)
 		queue_redraw()
 	hover_cell = new_hover_cell
-	await get_tree().process_frame
+	grid.queue_redraw()
 
 func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
 	if hover.x < 0 or hover.y < 0 or hover.y > data.records.size() - 2 or hover.x > fields.size() - 1:
@@ -255,6 +274,7 @@ func refresh():
 			else:
 				celledit.text = "%s" % content
 			celledit.custom_minimum_size = Vector2(fields[f].width, cell_height)
+	grid.queue_redraw()
 
 # You can always call this after either creating a celledit or getting from a pool 
 func _initialize_celledit(celledit: Label):
@@ -262,7 +282,7 @@ func _initialize_celledit(celledit: Label):
 	celledit.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	celledit.theme_type_variation = "TableCell"
 	celledit.autowrap_mode = TextServer.AUTOWRAP_OFF
-	celledit.clip_text = true
+	celledit.clip_text = false # For batch text rendering
 	celledit.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	celledit.max_lines_visible = 1
 
