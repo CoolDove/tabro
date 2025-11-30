@@ -61,9 +61,18 @@ func _ready():
 				for c in main_panel.get_children():
 					c.queue_free()
 	)
+	# print("system fonts: %s" % OS.get_system_fonts())
+	var font_fallback = SystemFont.new()
+	font_fallback.antialiasing = TextServer.FONT_ANTIALIASING_LCD
+	font_fallback.font_names = ["LXGW WenKai", "Verdana", "Cambria"]
+	font_fallback.allow_system_fallback = true
+	
 	var font = SystemFont.new()
 	font.antialiasing = TextServer.FONT_ANTIALIASING_LCD
-	font.font_names = ["Verdana", "Cambria"]
+	font.font_names = ["LXGW WenKai", "Verdana", "Cambria"]
+	#font.font_names = ["IosevkaTermSlab Nerd Font", "Verdana", "Cambria"]
+	font.fallbacks = [font_fallback]
+	font.allow_system_fallback = false
 	theme = ThemeDB.get_project_theme()
 	theme.default_font = font
 	theme.default_font_size = 22
