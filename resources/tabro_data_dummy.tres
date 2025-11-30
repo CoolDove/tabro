@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="TabroData" load_steps=6 format=3 uid="uid://bhb7nxa51p5ws"]
+
+[ext_resource type="Script" uid="uid://bwteywwj5dpyu" path="res://system/data/field_data.gd" id="1_nbeiw"]
+[ext_resource type="Script" uid="uid://ce1e7vr4f55kl" path="res://system/data/tabro_data.gd" id="2_qd1qv"]
+
+[sub_resource type="Resource" id="Resource_nbeiw"]
+script = ExtResource("1_nbeiw")
+name = "id"
+width = 140
+metadata/_custom_type_script = "uid://bwteywwj5dpyu"
+
+[sub_resource type="Resource" id="Resource_qd1qv"]
+script = ExtResource("1_nbeiw")
+name = "name"
+width = 180
+metadata/_custom_type_script = "uid://bwteywwj5dpyu"
+
+[sub_resource type="Resource" id="Resource_ab8tm"]
+script = ExtResource("1_nbeiw")
+name = "description"
+width = 190
+metadata/_custom_type_script = "uid://bwteywwj5dpyu"
+
+[resource]
+script = ExtResource("2_qd1qv")
+fields = Array[ExtResource("1_nbeiw")]([SubResource("Resource_nbeiw"), SubResource("Resource_qd1qv"), SubResource("Resource_ab8tm")])
+metadata/_custom_type_script = "uid://ce1e7vr4f55kl"
