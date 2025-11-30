@@ -15,11 +15,13 @@ var data : CsvData:
 		return _data
 	set(v):
 		# Normalize
-		_data = v
-		if _data != null:
+		if v != null:
+			_data = v.duplicate_deep()
 			for r in v.records:
 				for i in range(0, data.column - r.size()):
 					r.append("")
+		else:
+			_data = null
 		call_deferred("refresh")
 var _data : CsvData
 
@@ -85,6 +87,8 @@ func _ready():
 	grid.add_child(_virtual_spacing_after, false, INTERNAL_MODE_BACK)
 
 	grid.draw.connect(func ():
+		if data == null:
+			return
 		var grid_size = grid.size
 		var grid_color = Color.BLACK
 		for i in range(visible_begin, min(visible_end, data.records.size())):
@@ -206,6 +210,8 @@ func _update_hover():
 	grid.queue_redraw()
 
 func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
+	if data == null:
+		return null
 	if hover.x < 0 or hover.y < 0 or hover.y > data.records.size() - 2 or hover.x > fields.size() - 1:
 		return null
 	var linectnr = grid.get_child(hover.y - visible_begin)
