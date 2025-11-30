@@ -86,7 +86,7 @@ func action_open_file():
 	fdialog.use_native_dialog = true
 	fdialog.access = FileDialog.ACCESS_FILESYSTEM
 	fdialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
-	fdialog.filters = ["*.tbr"]
+	fdialog.filters = ["*.tbr", "*.csv"]
 
 	fdialog.file_selected.connect(func(file):
 		print("select file: %s" % file)
@@ -109,11 +109,25 @@ func open_file(filepath: String) -> bool:
 	if not FileAccess.file_exists(filepath):
 		return false
 	clear_main_panel()
-	var table_edit = TableEdit.load_from_file(filepath)
-	if table_edit == null:
-		return false
-	add_to_main_panel(table_edit)
-	return true
+	if filepath.ends_with(".csv"):
+		var csvdata = CsvReader.load(filepath)
+		var tbrdata = TabroData.new()
+		if csvdata.records.size() > 0:
+			for f in csvdata.records[0]:
+				tbrdata.add_field(f)
+		tbrdata.normalize()
+		for r in range(1, csvdata.records.size()):
+			var row = csvdata.records[r]
+			var ary = tbrdata.add_record()
+			for c in range(0, csvdata.column):
+				ary[c] = row[c]
+		return _open_data(tbrdata)
+	else:
+		var table_edit = TableEdit.load_from_file(filepath)
+		if table_edit == null:
+			return false
+		add_to_main_panel(table_edit)
+		return true
 
 func _open_data(data: TabroData) -> bool:
 	clear_main_panel()

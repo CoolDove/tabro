@@ -107,14 +107,17 @@ func _ready():
 	_virtual_spacing_before.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_virtual_spacing_before.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 
-	_virtual_spacing_after = Button.new()
-	_virtual_spacing_after.text = "Add New Record"
+	_virtual_spacing_after = Control.new()
 	_virtual_spacing_after.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_virtual_spacing_after.size_flags_vertical = Control.SIZE_SHRINK_END
-	_virtual_spacing_after.pressed.connect(func():
+	var btn_new_record = Button.new()
+	btn_new_record.text = "Add New Record"
+	btn_new_record.pressed.connect(func():
 		data.add_record()
 		refresh()
 	)
+	btn_new_record.set_anchors_preset(PRESET_TOP_LEFT)
+	_virtual_spacing_after.add_child(btn_new_record)
 
 	grid.add_child(_virtual_spacing_before, false, INTERNAL_MODE_FRONT)
 	grid.add_child(_virtual_spacing_after, false, INTERNAL_MODE_BACK)

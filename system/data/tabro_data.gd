@@ -24,10 +24,11 @@ func add_field(name: String):
 	if _is_normalized:
 		normalize()
 
-func add_record():
+func add_record() -> PackedStringArray:
 	var row : PackedStringArray
 	row.resize(fields.size())
 	records.append(row)
+	return row
 
 enum Version {
 	V00 = 1,
