@@ -8,14 +8,18 @@ class_name TableEdit
 
 @onready var _grid_hover_highlight_mark = $HoverHighlightMark
 
-
 var cell_value_edit : CellValueEdit
 
 var data : CsvData:
 	get:
 		return _data
 	set(v):
+		# Normalize
 		_data = v
+		if _data != null:
+			for r in v.records:
+				for i in range(0, data.column - r.size()):
+					r.append("")
 		call_deferred("refresh")
 var _data : CsvData
 
@@ -83,18 +87,19 @@ func _ready():
 	grid.draw.connect(func ():
 		var grid_size = grid.size
 		var grid_color = Color.BLACK
-		for i in range(visible_begin, min(visible_end, data.records.size()) + 1):
+		for i in range(visible_begin, min(visible_end, data.records.size())):
 			var y = i * cell_height
 			grid.draw_line(Vector2(0,y), Vector2(grid_size.x, y), grid_color)
 		var x = 0
+		var bottom = min(grid_size.y, (data.records.size() - 1) * cell_height)
 		var draw_cell = null
-		grid.draw_line(Vector2(x, 0), Vector2(x, grid_size.y), grid_color)
+		grid.draw_line(Vector2(x, 0), Vector2(x, bottom), grid_color)
 		for fidx in range(0, fields.size()):
 			var f = fields[fidx]
 			if is_hover_cell_valid and hover_cell.x == fidx:
 				draw_cell = Rect2(Vector2(x, hover_cell.y * cell_height), Vector2(f.width, cell_height));
 			x += f.width
-			grid.draw_line(Vector2(x, 0), Vector2(x, grid_size.y), grid_color)
+			grid.draw_line(Vector2(x, 0), Vector2(x, bottom), grid_color)
 		if draw_cell is Rect2:
 			grid.draw_rect(draw_cell, Color(0x00c2c1ff), false, 3)
 	)
