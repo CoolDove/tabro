@@ -15,8 +15,8 @@ signal on_edit_cancel
 
 func close():
 	var twn = create_tween()
-	twn.parallel().tween_property(self, "modulate", Color(1,1,1, 0), 0.15)
-	twn.parallel().tween_property(self, "size", Vector2(0,0), 0.15)
+	twn.parallel().tween_property(self, "modulate", Color(1,1,1, 0), 0.1)
+	twn.parallel().tween_property(self, "size", Vector2(size.x,0), 0.15)
 	twn.tween_callback(queue_free)
 
 func _init(value: Variant = null, type:CellType=CellType.STRING):
@@ -46,7 +46,7 @@ func _input(e):
 	if e is InputEventMouseButton:
 		if e.pressed:
 			var lmpos = get_local_mouse_position()
-			var safe = 30
+			var safe = 5
 			if lmpos.x < 0 - safe or lmpos.y < 0 - safe or lmpos.x >= size.x + safe or lmpos.y >= size.y + safe:
 				_editor.release_focus()
 
@@ -54,6 +54,7 @@ func _create_text_edit() -> TextEdit:
 	var te = TextEdit.new()
 	if initial_value is String:
 		te.text = initial_value
+		te.set_caret_column(initial_value.length())
 	te.set_anchors_preset(PRESET_FULL_RECT)
 	add_child(te)
 	te.call_deferred("grab_focus")

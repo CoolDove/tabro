@@ -1,6 +1,22 @@
-[gd_scene load_steps=2 format=3 uid="uid://ct6caepvtug3e"]
+[gd_scene load_steps=3 format=3 uid="uid://ct6caepvtug3e"]
 
 [ext_resource type="Script" uid="uid://bisark4bcqhly" path="res://scenes/table_edit.gd" id="1_qqa4w"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qqa4w"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.49747366, 0.49747372, 0.49747342, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
 
 [node name="TableEdit" type="Panel"]
 custom_minimum_size = Vector2(360, 0)
@@ -11,6 +27,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_qqa4w")
 script = ExtResource("1_qqa4w")
 
 [node name="TitleScroller" type="ScrollContainer" parent="."]
@@ -35,7 +52,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = 38.0
-offset_bottom = -9.0
+offset_bottom = -2.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3

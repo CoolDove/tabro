@@ -23,6 +23,7 @@ func _ready():
 					c.queue_free()
 	)
 	var font = SystemFont.new()
+	font.antialiasing = TextServer.FONT_ANTIALIASING_LCD
 	font.font_names = ["Verdana", "Cambria"]
 	theme = ThemeDB.get_project_theme()
 	theme.default_font = font
