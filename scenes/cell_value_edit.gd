@@ -55,6 +55,7 @@ func _create_text_edit() -> TextEdit:
 	if initial_value is String:
 		te.text = initial_value
 		te.set_caret_column(initial_value.length())
+		te.clear_undo_history()
 	te.set_anchors_preset(PRESET_FULL_RECT)
 	add_child(te)
 	te.call_deferred("grab_focus")
