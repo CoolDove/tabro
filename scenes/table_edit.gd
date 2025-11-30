@@ -10,23 +10,19 @@ class_name TableEdit
 
 var cell_value_edit : CellValueEdit
 
-var data : CsvData:
+var data :TabroData:
 	get:
 		return _data
 	set(v):
-		# Normalize
-		if v != null:
-			_data = v.duplicate_deep()
-			for r in v.records:
-				for i in range(0, data.column - r.size()):
-					r.append("")
-		else:
-			_data = null
+		_data = v
+		v.normalize()
 		call_deferred("refresh")
-var _data : CsvData
+var _data : TabroData
 
 var cell_height = 32.0
-var fields : Array[Field]
+var fields :
+	get:
+		return data.fields if data != null else null
 
 var _pool_label : Node # Array[Label]
 
@@ -34,7 +30,13 @@ var select_region : Rect2i
 var hover_cell : Vector2i
 var is_hover_cell_valid :bool:
 	get:
-		return hover_cell.x >= 0 and hover_cell.y >= 0
+		return not (
+			hover_cell.x < 0 or
+			hover_cell.y < 0 or
+			hover_cell.x >= fields.size() or
+			hover_cell.y >= visible_end or
+			hover_cell.y >= data.records.size()
+		)
 
 class Field:
 	var name : String
@@ -50,9 +52,37 @@ var visible_end : int: # exclude
 	get:
 		return ceili((gridscroller.scroll_vertical + gridscroller.size.y) / cell_height)
 
-func _init(csvdata:CsvData=null):
-	data = csvdata
-	pass
+var _filepath : String
+
+
+static func load_from_data(tbrdata: TabroData) -> TableEdit:
+	var _TableEdit = preload("./table_edit.tscn")
+	var edit = _TableEdit.instantiate() as TableEdit
+	edit.data = tbrdata
+	return edit
+
+static func load_from_file(filepath: String) -> TableEdit:
+	if not FileAccess.file_exists(filepath):
+		return null
+	var file = FileAccess.open(filepath, FileAccess.READ)
+	if file == null:
+		return null
+	var raw = file.get_as_text()
+	file.close()
+	var d = TabroData.deserialize(raw)
+	if d != null and d is TabroData:
+		var edit = load_from_data(d)
+		edit._filepath = filepath
+		return edit
+	return null
+
+func save(filepath:String=""):
+	var saveto = filepath if filepath != "" else _filepath
+	var file = FileAccess.open(saveto, FileAccess.WRITE)
+	var jsonstr = TabroData.serialize(data)
+	file.store_string(jsonstr)
+	file.close()
+	print("save to %s" % saveto)
 
 func _ready():
 	# Add a little block to fit the scroll bar width in body scroll container.
@@ -79,9 +109,16 @@ func _ready():
 	_virtual_spacing_before.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_virtual_spacing_before.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 
-	_virtual_spacing_after = Control.new()
+	_virtual_spacing_after = Button.new()
+	_virtual_spacing_after.text = "Add New Record"
 	_virtual_spacing_after.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_virtual_spacing_after.size_flags_vertical = Control.SIZE_SHRINK_END
+	_virtual_spacing_after.pressed.connect(func():
+		var strarray = PackedStringArray()
+		strarray.resize(fields.size())
+		data.records.append(strarray)
+		refresh()
+	)
 
 	grid.add_child(_virtual_spacing_before, false, INTERNAL_MODE_FRONT)
 	grid.add_child(_virtual_spacing_after, false, INTERNAL_MODE_BACK)
@@ -91,11 +128,12 @@ func _ready():
 			return
 		var grid_size = grid.size
 		var grid_color = Color.BLACK
+		grid.draw_line(Vector2(0,0), Vector2(grid_size.x, 0), grid_color)
 		for i in range(visible_begin, min(visible_end, data.records.size())):
-			var y = i * cell_height
+			var y = (i + 1) * cell_height
 			grid.draw_line(Vector2(0,y), Vector2(grid_size.x, y), grid_color)
 		var x = 0
-		var bottom = min(grid_size.y, (data.records.size() - 1) * cell_height)
+		var bottom = min(grid_size.y, data.records.size() * cell_height)
 		var draw_cell = null
 		grid.draw_line(Vector2(x, 0), Vector2(x, bottom), grid_color)
 		for fidx in range(0, fields.size()):
@@ -136,7 +174,7 @@ func _gui_input(event):
 				MOUSE_BUTTON_LEFT:
 					if event.is_released() and is_hover_cell_valid:
 						var celledit = _get_celledit_from_hover_cell(hover_cell)
-						var data_row_idx = hover_cell.y + 1
+						var data_row_idx = hover_cell.y
 						var data_col_idx = hover_cell.x
 						var fieldinfo = fields[hover_cell.x]
 						if celledit != null:
@@ -187,13 +225,16 @@ func _update_hover():
 	else:
 		var hovery = floori((grid_mpos.y + gridscroller.scroll_vertical) / cell_height)
 		var _hoverxpx = int(grid_mpos.x + gridscroller.scroll_horizontal)
-		var hoverx = 0
+		var hoverx = -1
 		for fieldidx in range(0, fields.size()):
 			hoverx = fieldidx
 			var field = fields[fieldidx]
 			if _hoverxpx < field.width:
+				_hoverxpx = 0
 				break
 			_hoverxpx -= field.width
+		if _hoverxpx > 0:
+			hoverx = -1
 		new_hover_cell = Vector2i(hoverx, hovery)
 	if new_hover_cell == hover_cell:
 		return
@@ -212,7 +253,7 @@ func _update_hover():
 func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
 	if data == null:
 		return null
-	if hover.x < 0 or hover.y < 0 or hover.y > data.records.size() - 2 or hover.x > fields.size() - 1:
+	if hover.x < 0 or hover.y < 0 or hover.y > data.records.size() - 1 or hover.x > fields.size() - 1:
 		return null
 	var linectnr = grid.get_child(hover.y - visible_begin)
 	if linectnr == null:
@@ -231,28 +272,30 @@ func refresh():
 	_virtual_spacing_before.custom_minimum_size = Vector2(0, visible_begin * cell_height)
 	_virtual_spacing_after.custom_minimum_size  = Vector2(0, int(gridscroller.size.y * 0.4))
 
-	for i in range(0, data.records[0].size() - titleline.get_child_count()):
+	var fields_count = fields.size()
+	for i in range(0, fields_count - titleline.get_child_count()):
 		titleline.add_child(_get_cell_control_label())
-	for i in range(0, titleline.get_child_count() - data.records[0].size()):
+	for i in range(0, titleline.get_child_count() - fields_count):
 		var c = titleline.get_child(-1)
 		titleline.remove_child(c)
 		_recycle_cell_control_label(c)
 
-	fields.clear()
-	for f in data.records[0]:
-		var celledit = titleline.get_child(fields.size()) as Label
-		var field = Field.new()
-		field.name = f
-		field.width = 160 + hash(f) % 40
-		fields.push_back(field)
+	# fields.clear()
+	for fidx in range(0, fields_count):
+		var field = fields[fidx]
+		var celledit = titleline.get_child(fidx) as Label
+		# var field = Field.new()
+		# field.name = f
+		# field.width = 160 + hash(f) % 40
+		# fields.push_back(field)
 
 		# Set field edit
 		_initialize_celledit(celledit)
-		celledit.text = f
+		celledit.text = field.name
 		celledit.custom_minimum_size = Vector2(field.width, titleline.size.y)
 
 	var visible_record_count = min(\
-			visible_end - visible_begin, data.records.size() - 1 - visible_begin
+			visible_end - visible_begin, data.records.size() - visible_begin
 	)
 	for i in range(0, visible_record_count - grid.get_child_count()):
 		var line = HBoxContainer.new()
@@ -268,27 +311,22 @@ func refresh():
 		for f in range(0, line.get_child_count() - field_count):
 			line.remove_child(line.get_child(-1))
 
-	for r in range(visible_begin+1, visible_record_count + visible_begin + 1):
+	for r in range(visible_begin, visible_record_count + visible_begin):
 		var row = data.records[r]
-		var linectnr = grid.get_child(r - (visible_begin+1))
-		for f in range(0, row.size()):
-			var celledit = linectnr.get_child(f)
+		var linectnr = grid.get_child(r - visible_begin)
+		# print("row: %s" % row)
+		for col in range(0, fields_count):
+			var celledit = linectnr.get_child(col)
 			# Set cell edit
 			_initialize_celledit(celledit)
-			var content = row[f]
-			if content is String:
-				var n = content.find("\n")
-				if n != -1:
-					celledit.text = "%s…" % content.substr(0, n)
-				else:
-					celledit.text = content
-			else:
-				celledit.text = "%s" % content
-			celledit.custom_minimum_size = Vector2(fields[f].width, cell_height)
+			celledit.text = row[col]
+			celledit.custom_minimum_size = Vector2(fields[col].width, cell_height)
 	grid.queue_redraw()
 
 # You can always call this after either creating a celledit or getting from a pool 
 func _initialize_celledit(celledit: Label):
+	if celledit == null:
+		return
 	celledit.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	celledit.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	celledit.theme_type_variation = "TableCell"

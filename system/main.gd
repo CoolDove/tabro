@@ -6,8 +6,6 @@ class_name Main
 @onready var popupm_edit = $Window/MenuBar/PM_Edit
 @onready var main_panel = $Window/Body/MainPanel
 
-var _TableEdit = preload("res://scenes/table_edit.tscn")
-
 static var instance : Main
 
 func _ready():
@@ -17,7 +15,48 @@ func _ready():
 			0:
 				action_open_file()
 			1:
-				print("Not implemented!")
+				var table_edit = main_panel.get_child(0)
+				if table_edit == null or table_edit is not TableEdit:
+					return
+				var saveto = table_edit._filepath
+				if saveto == null or saveto == "":
+					var fdialog = FileDialog.new()
+					fdialog.mode = Window.MODE_WINDOWED
+					fdialog.use_native_dialog = true
+					fdialog.access = FileDialog.ACCESS_FILESYSTEM
+					fdialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+					fdialog.filters = ["*.tbr"]
+					fdialog.file_selected.connect(func(file):
+						print("save file to: %s" % file)
+						table_edit.save(file)
+						table_edit._filepath = file
+						fdialog.queue_free()
+					)
+					fdialog.canceled.connect(fdialog.queue_free)
+					add_child(fdialog)
+					fdialog.popup_centered_ratio()
+				else:
+					table_edit.save(saveto)
+					table_edit._filepath = saveto
+			2:
+				var table_edit = main_panel.get_child(0)
+				if table_edit == null or table_edit is not TableEdit:
+					return
+				var fdialog = FileDialog.new()
+				fdialog.mode = Window.MODE_WINDOWED
+				fdialog.use_native_dialog = true
+				fdialog.access = FileDialog.ACCESS_FILESYSTEM
+				fdialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+				fdialog.filters = ["*.tbr"]
+				fdialog.file_selected.connect(func(file):
+					print("save file to: %s" % file)
+					table_edit.save(file)
+					table_edit._filepath = file
+					fdialog.queue_free()
+				)
+				fdialog.canceled.connect(fdialog.queue_free)
+				add_child(fdialog)
+				fdialog.popup_centered_ratio()
 			3:
 				for c in main_panel.get_children():
 					c.queue_free()
@@ -30,7 +69,16 @@ func _ready():
 	theme.default_font_size = 22
 
 	await get_tree().process_frame
-	open_file("res://resources/skills.csv")
+
+	var empty_table = TabroData.new()
+	empty_table.normalize()
+	empty_table.add_field("id")
+	empty_table.add_field("name")
+	empty_table.add_field("description")
+	empty_table.add_record()
+	empty_table.add_record()
+	empty_table.add_record()
+	_open_data(empty_table)
 
 func action_open_file():
 	var fdialog = FileDialog.new()
@@ -38,7 +86,7 @@ func action_open_file():
 	fdialog.use_native_dialog = true
 	fdialog.access = FileDialog.ACCESS_FILESYSTEM
 	fdialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
-	fdialog.filters = ["*.csv"]
+	fdialog.filters = ["*.tbr"]
 
 	fdialog.file_selected.connect(func(file):
 		print("select file: %s" % file)
@@ -50,11 +98,27 @@ func action_open_file():
 	add_child(fdialog)
 	fdialog.popup_centered_ratio()
 
-func open_file(filepath: String):
-	var csvdata = CsvReader.load(filepath)
+func clear_main_panel():
 	for c in main_panel.get_children():
 		c.queue_free()
-	var table_edit = _TableEdit.instantiate() as TableEdit
-	table_edit.data = csvdata
-	table_edit.set_anchors_preset(PRESET_FULL_RECT)
-	main_panel.add_child(table_edit)
+func add_to_main_panel(control: Control):
+	control.set_anchors_preset(PRESET_FULL_RECT)
+	main_panel.add_child(control)
+
+func open_file(filepath: String) -> bool:
+	if not FileAccess.file_exists(filepath):
+		return false
+	clear_main_panel()
+	var table_edit = TableEdit.load_from_file(filepath)
+	if table_edit == null:
+		return false
+	add_to_main_panel(table_edit)
+	return true
+
+func _open_data(data: TabroData) -> bool:
+	clear_main_panel()
+	var table_edit = TableEdit.load_from_data(data)
+	if table_edit == null:
+		return false
+	add_to_main_panel(table_edit)
+	return true

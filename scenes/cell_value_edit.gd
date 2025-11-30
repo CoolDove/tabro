@@ -69,13 +69,15 @@ func _gui_input(e):
 
 	script.reload()
 	te.set_script(script)
+	te.context_menu_enabled = false
 	te.connect("gui_event_handle", func(e: InputEvent):
 		if e is InputEventKey:
 			if e.keycode == KEY_ESCAPE and e.pressed:
 				_canceled = true
 				on_edit_cancel.emit()
 				close()
-			elif e.keycode == KEY_ENTER and e.ctrl_pressed:
-				te.release_focus()
+			elif e.keycode == KEY_ENTER and e.pressed:
+				if not e.ctrl_pressed:
+					te.release_focus()
 	)
 	return te
