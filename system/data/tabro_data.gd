@@ -60,6 +60,8 @@ static func serialize(data: TabroData) -> String:
 
 static func deserialize(raw: String) -> TabroData:
 	var save = JSON.parse_string(raw)
+	if save == null:
+		return null
 	var version = save["version"]
 	var body = save["body"]
 	if version == null or body == null:

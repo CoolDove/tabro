@@ -109,7 +109,7 @@ func open_file(filepath: String) -> bool:
 	if not FileAccess.file_exists(filepath):
 		return false
 	clear_main_panel()
-	if filepath.ends_with(".csv"):
+	if filepath.ends_with(".csv") or filepath.ends_with(".xsv"):
 		var csvdata = CsvReader.load(filepath)
 		var tbrdata = TabroData.new()
 		if csvdata.records.size() > 0:
@@ -119,7 +119,7 @@ func open_file(filepath: String) -> bool:
 		for r in range(1, csvdata.records.size()):
 			var row = csvdata.records[r]
 			var ary = tbrdata.add_record()
-			for c in range(0, csvdata.column):
+			for c in range(0, min(csvdata.column, row.size()-1)):
 				ary[c] = row[c]
 		return _open_data(tbrdata)
 	else:
