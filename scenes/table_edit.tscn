@@ -36,50 +36,38 @@ size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_qqa4w")
 script = ExtResource("1_qqa4w")
 
-[node name="TitleScroller" type="ScrollContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="TitleScroller" type="ScrollContainer" parent="VBoxContainer"]
 clip_contents = false
 custom_minimum_size = Vector2(0, 36)
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 40.0
-grow_horizontal = 2
+layout_mode = 2
+size_flags_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_b7skw")
 theme_override_styles/focus = SubResource("StyleBoxFlat_b7skw")
 horizontal_scroll_mode = 3
 vertical_scroll_mode = 0
 
-[node name="TitleLine" type="HBoxContainer" parent="TitleScroller"]
+[node name="TitleLine" type="HBoxContainer" parent="VBoxContainer/TitleScroller"]
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="ScrollContainer" type="ScrollContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = 38.0
-offset_bottom = -2.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 vertical_scroll_mode = 4
 
-[node name="Grid" type="VBoxContainer" parent="ScrollContainer"]
+[node name="Grid" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 theme_override_constants/separation = 0
-
-[node name="HoverHighlightMark" type="Panel" parent="."]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-theme_type_variation = &"HoverHighlightMark"

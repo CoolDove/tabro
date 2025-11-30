@@ -1,12 +1,10 @@
 extends Control
 class_name TableEdit
 
-@onready var titlescroller = $TitleScroller
-@onready var titleline = $TitleScroller/TitleLine
-@onready var gridscroller = $ScrollContainer
-@onready var grid = $ScrollContainer/Grid
-
-@onready var _grid_hover_highlight_mark = $HoverHighlightMark
+@onready var titlescroller = $VBoxContainer/TitleScroller
+@onready var titleline = $VBoxContainer/TitleScroller/TitleLine
+@onready var gridscroller = $VBoxContainer/ScrollContainer
+@onready var grid = $VBoxContainer/ScrollContainer/Grid
 
 var cell_value_edit : CellValueEdit
 
@@ -114,9 +112,7 @@ func _ready():
 	_virtual_spacing_after.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_virtual_spacing_after.size_flags_vertical = Control.SIZE_SHRINK_END
 	_virtual_spacing_after.pressed.connect(func():
-		var strarray = PackedStringArray()
-		strarray.resize(fields.size())
-		data.records.append(strarray)
+		data.add_record()
 		refresh()
 	)
 
@@ -145,9 +141,8 @@ func _ready():
 		if draw_cell is Rect2:
 			grid.draw_rect(draw_cell, Color(0x00c2c1ff), false, 3)
 	)
-
-	# Visual stuff
-	remove_child(_grid_hover_highlight_mark)
+	if data != null:
+		call_deferred("refresh")
 
 func _enter_tree():
 	_pool_label = Node.new()
@@ -238,14 +233,7 @@ func _update_hover():
 		new_hover_cell = Vector2i(hoverx, hovery)
 	if new_hover_cell == hover_cell:
 		return
-	var new_hover_celledit = _get_celledit_from_hover_cell(new_hover_cell)
 	if hover_cell != new_hover_cell:
-		var old_parent = _grid_hover_highlight_mark.get_parent()
-		if old_parent != null:
-			old_parent.remove_child(_grid_hover_highlight_mark)
-		if new_hover_celledit != null:
-			_grid_hover_highlight_mark.set_anchors_preset(PRESET_FULL_RECT)
-			# new_hover_celledit.add_child(_grid_hover_highlight_mark, false, INTERNAL_MODE_BACK)
 		queue_redraw()
 	hover_cell = new_hover_cell
 	grid.queue_redraw()
@@ -284,15 +272,10 @@ func refresh():
 	for fidx in range(0, fields_count):
 		var field = fields[fidx]
 		var celledit = titleline.get_child(fidx) as Label
-		# var field = Field.new()
-		# field.name = f
-		# field.width = 160 + hash(f) % 40
-		# fields.push_back(field)
-
 		# Set field edit
 		_initialize_celledit(celledit)
 		celledit.text = field.name
-		celledit.custom_minimum_size = Vector2(field.width, titleline.size.y)
+		celledit.custom_minimum_size = Vector2(field.width, cell_height + 4)
 
 	var visible_record_count = min(\
 			visible_end - visible_begin, data.records.size() - visible_begin
