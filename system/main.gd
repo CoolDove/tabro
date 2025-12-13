@@ -69,13 +69,13 @@ func _ready():
 	
 	var font = SystemFont.new()
 	font.antialiasing = TextServer.FONT_ANTIALIASING_LCD
-	font.font_names = ["LXGW WenKai", "Verdana", "Cambria"]
+	font.font_names = ["Microsoft YaHei UI", "Verdana", "Cambria"]
 	#font.font_names = ["IosevkaTermSlab Nerd Font", "Verdana", "Cambria"]
 	font.fallbacks = [font_fallback]
 	font.allow_system_fallback = false
 	theme = ThemeDB.get_project_theme()
 	theme.default_font = font
-	theme.default_font_size = 22
+	theme.default_font_size = 18
 
 	await get_tree().process_frame
 

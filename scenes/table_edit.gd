@@ -265,20 +265,25 @@ func refresh():
 
 	var fields_count = fields.size()
 	for i in range(0, fields_count - titleline.get_child_count()):
-		titleline.add_child(_get_cell_control_label())
+		titleline.add_child(TableTitleLabel.new())
 	for i in range(0, titleline.get_child_count() - fields_count):
 		var c = titleline.get_child(-1)
 		titleline.remove_child(c)
-		_recycle_cell_control_label(c)
+		c.queue_free()
 
-	# fields.clear()
 	for fidx in range(0, fields_count):
 		var field = fields[fidx]
-		var celledit = titleline.get_child(fidx) as Label
+		var celledit = titleline.get_child(fidx) as TableTitleLabel
 		# Set field edit
 		_initialize_celledit(celledit)
 		celledit.text = field.name
 		celledit.custom_minimum_size = Vector2(field.width, cell_height + 4)
+		celledit.on_width_changed.connect(func(width: float):
+			field.width = width
+			for record in grid.get_children():
+				var cell = record.get_child(fidx)
+				cell.custom_minimum_size.x = field.width
+		)
 
 	var visible_record_count = min(\
 			visible_end - visible_begin, data.records.size() - visible_begin
