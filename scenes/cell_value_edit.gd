@@ -14,10 +14,11 @@ signal on_edit_finish(value)
 signal on_edit_cancel
 
 func close():
-	var twn = create_tween()
-	twn.parallel().tween_property(self, "modulate", Color(1,1,1, 0), 0.1)
-	twn.parallel().tween_property(self, "size", Vector2(size.x,0), 0.15)
-	twn.tween_callback(queue_free)
+	queue_free()
+	# var twn = create_tween()
+	# twn.parallel().tween_property(self, "modulate", Color(1,1,1, 0), 0.1)
+	# twn.parallel().tween_property(self, "size", Vector2(size.x,0), 0.15)
+	# twn.tween_callback(queue_free)
 
 func _init(value: Variant = null, type:CellType=CellType.STRING):
 	self.initial_value = value

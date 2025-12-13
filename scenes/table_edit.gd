@@ -177,11 +177,7 @@ func _gui_input(event):
 						var fieldinfo = fields[hover_cell.x]
 						if celledit != null:
 							var edit = CellValueEdit.new(data.records[data_row_idx][data_col_idx], CellValueEdit.CellType.STRING) 
-							var twn = create_tween()
-							edit.size = Vector2(fieldinfo.width, cell_height)
-							edit.modulate = Color(1,1,1,0)
-							twn.parallel().tween_property(edit, "size", Vector2(fieldinfo.width+1, 220), 0.1)
-							twn.parallel().tween_property(edit, "modulate", Color.WHITE, 0.2)
+							edit.size = Vector2(fieldinfo.width+1, cell_height+1)
 							add_child(edit)
 							edit.global_position = celledit.global_position + Vector2(-1, -1)
 							cell_value_edit = edit
