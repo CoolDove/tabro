@@ -143,6 +143,19 @@ func _ready():
 			grid.draw_line(Vector2(x, 0), Vector2(x, bottom), grid_color)
 		if draw_cell is Rect2:
 			grid.draw_rect(draw_cell, Color(0x00c2c1ff), false, 3)
+		if select_region.size.x > 0 && select_region.size.y > 0:
+			# draw the select region
+			var p = select_region.position
+			var s = select_region.size
+			var xmin = 0
+			var xmax = 0
+			for i in range(0, fields.size()):
+				var w = fields[i].width
+				if i < p.x:
+					xmin += w
+				if i < p.x + s.x:
+					xmax += w
+			grid.draw_rect(Rect2i(xmin, p.y*cell_height, xmax-xmin, s.y*cell_height), Color.RED, false, 4)
 	)
 	if data != null:
 		call_deferred("refresh")
@@ -171,20 +184,21 @@ func _gui_input(event):
 			match event.button_index:
 				MOUSE_BUTTON_LEFT:
 					if event.is_released() and is_hover_cell_valid:
-						var celledit = _get_celledit_from_hover_cell(hover_cell)
-						var data_row_idx = hover_cell.y
-						var data_col_idx = hover_cell.x
-						var fieldinfo = fields[hover_cell.x]
-						if celledit != null:
-							var edit = CellValueEdit.new(data.records[data_row_idx][data_col_idx], CellValueEdit.CellType.STRING) 
-							edit.size = Vector2(fieldinfo.width+1, cell_height+1)
-							add_child(edit)
-							edit.global_position = celledit.global_position + Vector2(-1, -1)
-							cell_value_edit = edit
-							edit.on_edit_finish.connect(func(value):
-								data.records[data_row_idx][data_col_idx] = value
-								call_deferred("refresh")
-							)
+						_update_select(Rect2i(hover_cell, Vector2i.ONE))
+						#var celledit = _get_celledit_from_hover_cell(hover_cell)
+						#var data_row_idx = hover_cell.y
+						#var data_col_idx = hover_cell.x
+						#var fieldinfo = fields[hover_cell.x]
+						#if celledit != null:
+							#var edit = CellValueEdit.new(data.records[data_row_idx][data_col_idx], CellValueEdit.CellType.STRING) 
+							#edit.size = Vector2(fieldinfo.width+1, cell_height+1)
+							#add_child(edit)
+							#edit.global_position = celledit.global_position + Vector2(-1, -1)
+							#cell_value_edit = edit
+							#edit.on_edit_finish.connect(func(value):
+								#data.records[data_row_idx][data_col_idx] = value
+								#call_defefdrawrred("refresh")
+							#)
 		_update_hover()
 
 var _watch_mem_interval : float
@@ -235,6 +249,12 @@ func _update_hover():
 	if hover_cell != new_hover_cell:
 		queue_redraw()
 	hover_cell = new_hover_cell
+	grid.queue_redraw()
+
+func _update_select(new_select_region: Rect2i):
+	if select_region == new_select_region:
+		return
+	select_region = new_select_region
 	grid.queue_redraw()
 
 func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
