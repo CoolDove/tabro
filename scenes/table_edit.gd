@@ -233,7 +233,7 @@ func _update_hover():
 	var grid_mpos = gridscroller.get_local_mouse_position()
 	var new_hover_cell
 	var is_outside = grid_mpos.x < 0 or grid_mpos.y < 0 or grid_mpos.x > gridscroller.size.x or grid_mpos.y > gridscroller.size.y
-	if is_outside or cell_value_edit != null:
+	if is_outside: # or cell_value_edit != null:
 		new_hover_cell = Vector2i(-1,-1)
 	else:
 		var hovery = floori((grid_mpos.y + gridscroller.scroll_vertical) / cell_height)
