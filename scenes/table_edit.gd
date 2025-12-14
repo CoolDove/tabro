@@ -24,7 +24,8 @@ var fields :
 
 var _pool_label : Node # Array[Label]
 
-var select_region : Rect2i
+var select_anchor : Vector2i # The first cell pressed in the select region.
+var select_region : Rect2i # When size == Vector2i.ONE, means only one cell selected.
 var hover_cell : Vector2i
 var is_hover_cell_valid :bool:
 	get:
@@ -133,29 +134,31 @@ func _ready():
 			grid.draw_line(Vector2(0,y), Vector2(grid_size.x, y), grid_color)
 		var x = 0
 		var bottom = min(grid_size.y, data.records.size() * cell_height)
-		var draw_cell = null
+		var draw_hover_cell = null
 		grid.draw_line(Vector2(x, 0), Vector2(x, bottom), grid_color)
 		for fidx in range(0, fields.size()):
 			var f = fields[fidx]
 			if is_hover_cell_valid and hover_cell.x == fidx:
-				draw_cell = Rect2(Vector2(x, hover_cell.y * cell_height), Vector2(f.width, cell_height));
+				draw_hover_cell = Rect2(Vector2(x, hover_cell.y * cell_height), Vector2(f.width, cell_height));
 			x += f.width
 			grid.draw_line(Vector2(x, 0), Vector2(x, bottom), grid_color)
-		if draw_cell is Rect2:
-			grid.draw_rect(draw_cell, Color(0x00c2c1ff), false, 3)
-		if select_region.size.x > 0 && select_region.size.y > 0:
+		if select_region.position.x >= 0 && select_region.position.y >= 0:
 			# draw the select region
 			var p = select_region.position
 			var s = select_region.size
 			var xmin = 0
-			var xmax = 0
-			for i in range(0, fields.size()):
+			var width = 0
+			for i in range(0, p.x):
 				var w = fields[i].width
-				if i < p.x:
-					xmin += w
-				if i < p.x + s.x:
-					xmax += w
-			grid.draw_rect(Rect2i(xmin, p.y*cell_height, xmax-xmin, s.y*cell_height), Color.RED, false, 4)
+				xmin += w
+			for i in range(p.x, p.x+s.x+1):
+				var w = fields[i].width
+				width += w
+			var select_rect = Rect2i(xmin, p.y*cell_height, width, (s.y + 1)*cell_height)
+			grid.draw_rect(select_rect, Color(0x22afa222), true, 2)
+
+		if draw_hover_cell is Rect2:
+			grid.draw_rect(draw_hover_cell, Color(0x00c2c1ff), false, 3)
 	)
 	if data != null:
 		call_deferred("refresh")
@@ -169,6 +172,19 @@ func _exit_tree():
 func _gui_input(event):
 	if event is InputEventMouseMotion:
 		_update_hover()
+		if event.button_mask & MouseButton.MOUSE_BUTTON_LEFT && is_hover_cell_valid:
+			var region := Rect2i(select_anchor, Vector2i.ZERO)
+			if hover_cell.x < select_anchor.x:
+				region.position.x = hover_cell.x
+				region.size.x = select_anchor.x - hover_cell.x
+			elif hover_cell.x > select_anchor.x:
+				region.size.x = hover_cell.x - select_anchor.x
+			if hover_cell.y < select_anchor.y:
+				region.position.y = hover_cell.y
+				region.size.y = select_anchor.y - hover_cell.y
+			elif hover_cell.y > select_anchor.y:
+				region.size.y = hover_cell.y - select_anchor.y
+			_update_select(region)
 	elif event is InputEventMouseButton:
 		if Input.is_key_pressed(KEY_CTRL):
 			match event.button_index:
@@ -183,22 +199,10 @@ func _gui_input(event):
 		else:
 			match event.button_index:
 				MOUSE_BUTTON_LEFT:
-					if event.is_released() and is_hover_cell_valid:
-						_update_select(Rect2i(hover_cell, Vector2i.ONE))
-						#var celledit = _get_celledit_from_hover_cell(hover_cell)
-						#var data_row_idx = hover_cell.y
-						#var data_col_idx = hover_cell.x
-						#var fieldinfo = fields[hover_cell.x]
-						#if celledit != null:
-							#var edit = CellValueEdit.new(data.records[data_row_idx][data_col_idx], CellValueEdit.CellType.STRING) 
-							#edit.size = Vector2(fieldinfo.width+1, cell_height+1)
-							#add_child(edit)
-							#edit.global_position = celledit.global_position + Vector2(-1, -1)
-							#cell_value_edit = edit
-							#edit.on_edit_finish.connect(func(value):
-								#data.records[data_row_idx][data_col_idx] = value
-								#call_defefdrawrred("refresh")
-							#)
+					if event.is_pressed() and is_hover_cell_valid:
+						select_anchor = hover_cell
+						_update_select(Rect2i(hover_cell, Vector2i.ZERO))
+
 		_update_hover()
 
 var _watch_mem_interval : float
@@ -242,7 +246,7 @@ func _update_hover():
 				break
 			_hoverxpx -= field.width
 		if _hoverxpx > 0:
-			hoverx = -1
+			hoverx = fields.size()
 		new_hover_cell = Vector2i(hoverx, hovery)
 	if new_hover_cell == hover_cell:
 		return
@@ -254,8 +258,24 @@ func _update_hover():
 func _update_select(new_select_region: Rect2i):
 	if select_region == new_select_region:
 		return
+
 	select_region = new_select_region
 	grid.queue_redraw()
+	# To instantiate the cell value editor.
+	#var celledit = _get_celledit_from_hover_cell(hover_cell)
+	#var data_row_idx = hover_cell.y
+	#var data_col_idx = hover_cell.x
+	#var fieldinfo = fields[hover_cell.x]
+	#if celledit != null:
+		#var edit = CellValueEdit.new(data.records[data_row_idx][data_col_idx], CellValueEdit.CellType.STRING) 
+		#edit.size = Vector2(fieldinfo.width+1, cell_height+1)
+		#add_child(edit)
+		#edit.global_position = celledit.global_position + Vector2(-1, -1)
+		#cell_value_edit = edit
+		#edit.on_edit_finish.connect(func(value):
+			#data.records[data_row_idx][data_col_idx] = value
+			#call_defefdrawrred("refresh")
+		#)
 
 func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
 	if data == null:
