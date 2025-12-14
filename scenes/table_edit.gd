@@ -155,7 +155,8 @@ func _ready():
 				var w = fields[i].width
 				width += w
 			var select_rect = Rect2i(xmin, p.y*cell_height, width, (s.y + 1)*cell_height)
-			grid.draw_rect(select_rect, Color(0x22afa222), true, 2)
+			grid.draw_rect(select_rect, Color(0x22afa222), true)
+			grid.draw_rect(select_rect, Color(0x22afa255), false, 2)
 
 		if draw_hover_cell is Rect2:
 			grid.draw_rect(draw_hover_cell, Color(0x00c2c1ff), false, 3)
@@ -256,26 +257,41 @@ func _update_hover():
 	grid.queue_redraw()
 
 func _update_select(new_select_region: Rect2i):
-	if select_region == new_select_region:
-		return
-
 	select_region = new_select_region
 	grid.queue_redraw()
-	# To instantiate the cell value editor.
-	#var celledit = _get_celledit_from_hover_cell(hover_cell)
-	#var data_row_idx = hover_cell.y
-	#var data_col_idx = hover_cell.x
-	#var fieldinfo = fields[hover_cell.x]
-	#if celledit != null:
-		#var edit = CellValueEdit.new(data.records[data_row_idx][data_col_idx], CellValueEdit.CellType.STRING) 
-		#edit.size = Vector2(fieldinfo.width+1, cell_height+1)
-		#add_child(edit)
-		#edit.global_position = celledit.global_position + Vector2(-1, -1)
-		#cell_value_edit = edit
-		#edit.on_edit_finish.connect(func(value):
-			#data.records[data_row_idx][data_col_idx] = value
-			#call_defefdrawrred("refresh")
-		#)
+	if Main.instance:
+		var inspector = Main.request_inspector()
+		if new_select_region.size == Vector2i.ZERO:
+			var cell = select_region.position
+			var data_row_idx = cell.y
+			var data_col_idx = cell.x
+			var lb = Label.new()
+			lb.add_theme_color_override("font_color", Color.BLACK)
+			lb.text = "Record %s .%s" % [cell.y, fields[cell.x].name]
+			lb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			inspector.add_child(lb)
+			var text_edit = TextEdit.new()
+			text_edit.text = data.records[cell.y][cell.x]
+			text_edit.text_changed.connect(func():
+				data.records[cell.y][cell.x] = text_edit.text
+				refresh()
+			)
+			text_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			text_edit.custom_minimum_size.y = 360
+			inspector.add_child(text_edit)
+			# To instantiate the quick cell value editor.
+			var celledit = _get_celledit_from_hover_cell(hover_cell)
+			var fieldinfo = fields[hover_cell.x]
+			if celledit != null:
+				var edit = CellValueEdit.new(data.records[data_row_idx][data_col_idx], CellValueEdit.CellType.STRING) 
+				edit.size = Vector2(fieldinfo.width+1, cell_height+1)
+				add_child(edit)
+				edit.global_position = celledit.global_position + Vector2(-1, -1)
+				cell_value_edit = edit
+				edit.on_edit_finish.connect(func(value):
+					data.records[data_row_idx][data_col_idx] = value
+					call_deferred("refresh")
+				)
 
 func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
 	if data == null:

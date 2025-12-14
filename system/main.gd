@@ -5,6 +5,7 @@ class_name Main
 @onready var popupm_file = $Window/MenuBar/PM_File
 @onready var popupm_edit = $Window/MenuBar/PM_Edit
 @onready var main_panel = $Window/Body/MainPanel
+@onready var inspector_panel :VBoxContainer= $Window/Body/Inspector/Inspector
 
 static var instance : Main
 
@@ -88,6 +89,15 @@ func _ready():
 	empty_table.add_record()
 	empty_table.add_record()
 	_open_data(empty_table)
+
+
+static func request_inspector() -> VBoxContainer:
+	if instance == null:
+		return null
+	for child in instance.inspector_panel.get_children():
+		instance.inspector_panel.remove_child(child)
+		child.queue_free()
+	return instance.inspector_panel
 
 func action_open_file():
 	var fdialog = FileDialog.new()
