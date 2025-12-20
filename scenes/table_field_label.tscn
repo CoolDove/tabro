@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3 uid="uid://ccu2nwusfa5ck"]
+
+[ext_resource type="Script" uid="uid://bn2fl061fnmu1" path="res://scenes/table_field_label.gd" id="1_fsjfo"]
+[ext_resource type="Texture2D" uid="uid://cugi6lt0ebecq" path="res://resources/icons/field_type_string.tres" id="2_g4kva"]
+
+[node name="TableFieldLabel" type="Label"]
+offset_right = 146.0
+offset_bottom = 28.0
+mouse_filter = 0
+text = "Hello Dove"
+script = ExtResource("1_fsjfo")
+
+[node name="Icon" type="TextureRect" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -28.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_g4kva")
+stretch_mode = 5

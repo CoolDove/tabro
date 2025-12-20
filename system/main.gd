@@ -1,6 +1,8 @@
 extends Control
 class_name Main
 
+enum CellType { STRING=0, OPTION=1, MULTI_OPTION=2, NUMBER=3, UNKNOWN=4 }
+
 @onready var menu = $Window/MenuBar
 @onready var popupm_file = $Window/MenuBar/PM_File
 @onready var popupm_edit = $Window/MenuBar/PM_Edit

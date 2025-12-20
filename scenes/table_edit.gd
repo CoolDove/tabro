@@ -1,6 +1,8 @@
 extends Control
 class_name TableEdit
 
+var FieldLabelScn = preload("res://scenes/table_field_label.tscn")
+
 @onready var titlescroller = $VBoxContainer/TitleScroller
 @onready var titleline = $VBoxContainer/TitleScroller/TitleLine
 @onready var gridscroller = $VBoxContainer/ScrollContainer
@@ -203,7 +205,6 @@ func _gui_input(event):
 					if event.is_pressed() and is_hover_cell_valid:
 						select_anchor = hover_cell
 						_update_select(Rect2i(hover_cell, Vector2i.ZERO))
-
 		_update_hover()
 
 var _watch_mem_interval : float
@@ -260,38 +261,30 @@ func _update_select(new_select_region: Rect2i):
 	select_region = new_select_region
 	grid.queue_redraw()
 	if Main.instance:
-		var inspector = Main.request_inspector()
+		# var inspector = Main.request_inspector() # You can add_child to this inspector. But maybe not for a normal value cell.
 		if new_select_region.size == Vector2i.ZERO:
 			var cell = select_region.position
 			var data_row_idx = cell.y
 			var data_col_idx = cell.x
-			var lb = Label.new()
-			lb.add_theme_color_override("font_color", Color.BLACK)
-			lb.text = "Record %s .%s" % [cell.y, fields[cell.x].name]
-			lb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			inspector.add_child(lb)
-			var text_edit = TextEdit.new()
-			text_edit.text = data.records[cell.y][cell.x]
-			text_edit.text_changed.connect(func():
-				data.records[cell.y][cell.x] = text_edit.text
-				refresh()
-			)
-			text_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			text_edit.custom_minimum_size.y = 360
-			inspector.add_child(text_edit)
-			# To instantiate the quick cell value editor.
 			var celledit = _get_celledit_from_hover_cell(hover_cell)
-			var fieldinfo = fields[hover_cell.x]
-			if celledit != null:
-				var edit = CellValueEdit.new(data.records[data_row_idx][data_col_idx], CellValueEdit.CellType.STRING) 
-				edit.size = Vector2(fieldinfo.width+1, cell_height+1)
-				add_child(edit)
-				edit.global_position = celledit.global_position + Vector2(-1, -1)
-				cell_value_edit = edit
-				edit.on_edit_finish.connect(func(value):
-					data.records[data_row_idx][data_col_idx] = value
-					call_deferred("refresh")
-				)
+			_open_cell_edit(celledit, data_row_idx, data_col_idx)
+
+func _open_field_cell_edit(cell_control: Control, row: int, column: int):
+	pass
+
+func _open_cell_edit(cell_control: Control, row: int, column: int):
+	# To instantiate the quick cell value editor.
+	var fieldinfo = fields[column]
+	if cell_control != null:
+		var edit = CellValueEdit.new(data.records[row][column], Main.CellType.STRING) 
+		edit.size = Vector2(fieldinfo.width+1, cell_height+1)
+		add_child(edit)
+		edit.global_position = cell_control.global_position + Vector2(-1, -1)
+		cell_value_edit = edit
+		edit.on_edit_finish.connect(func(value):
+			data.records[row][column] = value
+			call_deferred("refresh")
+		)
 
 func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
 	if data == null:
@@ -317,7 +310,17 @@ func refresh():
 
 	var fields_count = fields.size()
 	for i in range(0, fields_count - titleline.get_child_count()):
-		titleline.add_child(TableTitleLabel.new())
+		var field_label = FieldLabelScn.instantiate()
+		titleline.add_child(field_label)
+		field_label.on_right_release.connect(func():
+			var field_index = field_label.get_meta("field_index")
+			var field = fields[field_index]
+			field.type += 1
+			if field.type == Main.CellType.UNKNOWN:
+				field.type = 0
+			field_label.cell_type = field.type
+		)
+
 	for i in range(0, titleline.get_child_count() - fields_count):
 		var c = titleline.get_child(-1)
 		titleline.remove_child(c)
@@ -325,7 +328,7 @@ func refresh():
 
 	for fidx in range(0, fields_count):
 		var field = fields[fidx]
-		var celledit = titleline.get_child(fidx) as TableTitleLabel
+		var celledit = titleline.get_child(fidx)
 		# Set field edit
 		_initialize_celledit(celledit)
 		celledit.text = field.name
@@ -336,6 +339,8 @@ func refresh():
 				var cell = record.get_child(fidx)
 				cell.custom_minimum_size.x = field.width
 		)
+		celledit.cell_type = field.type
+		celledit.set_meta("field_index", fidx)
 
 	var visible_record_count = min(\
 			visible_end - visible_begin, data.records.size() - visible_begin
