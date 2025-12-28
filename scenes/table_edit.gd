@@ -276,15 +276,25 @@ func _open_cell_edit(cell_control: Control, row: int, column: int):
 	# To instantiate the quick cell value editor.
 	var fieldinfo = fields[column]
 	if cell_control != null:
-		var edit = CellValueEdit.new(data.records[row][column], fieldinfo.type) 
-		edit.size = Vector2(fieldinfo.width+1, cell_height+1)
-		add_child(edit)
-		edit.global_position = cell_control.global_position + Vector2(-1, -1)
-		cell_value_edit = edit
-		edit.on_edit_finish.connect(func(value):
-			data.records[row][column] = value
-			call_deferred("refresh")
-		)
+		if fieldinfo.type == Main.FieldType.OPTION:
+			print("Options we have: ", fieldinfo.toption_options)
+			var options = fieldinfo.toption_options
+			var optbtn = OptionButton.new()
+			for o in options:
+				optbtn.add_item(o)
+			add_child(optbtn)
+			optbtn.global_position = cell_control.global_position + Vector2(-1, -1)
+			optbtn.size = Vector2(fieldinfo.width+1, cell_height+1)
+		else:
+			var edit = CellValueEdit.new(data.records[row][column], fieldinfo.type) 
+			add_child(edit)
+			edit.size = Vector2(fieldinfo.width+1, cell_height+1)
+			edit.global_position = cell_control.global_position + Vector2(-1, -1)
+			cell_value_edit = edit
+			edit.on_edit_finish.connect(func(value):
+				data.records[row][column] = value
+				call_deferred("refresh")
+			)
 
 func _get_cellctrl_from_hover_cell(hover: Vector2i) -> Control:
 	if data == null:
@@ -312,14 +322,14 @@ func refresh():
 	for i in range(0, fields_count - titleline.get_child_count()):
 		var field_label = FieldLabelScn.instantiate()
 		titleline.add_child(field_label)
-		field_label.on_right_release.connect(func():
-			var field_index = field_label.get_meta("field_index")
-			var field = fields[field_index]
-			field.type += 1
-			if field.type == Main.FieldType.UNKNOWN:
-				field.type = 0
-			field_label.field_type = field.type
-		)
+		# field_label.on_right_release.connect(func():
+		# 	var field_index = field_label.get_meta("field_index")
+		# 	var field = fields[field_index]
+		# 	field.type += 1
+		# 	if field.type == Main.FieldType.UNKNOWN:
+		# 		field.type = 0
+		# 	field_label.field_type = field.type
+		# )
 		field_label.on_left_release.connect(func():
 			var field_index = field_label.get_meta("field_index")
 			var field = fields[field_index]
@@ -328,6 +338,7 @@ func refresh():
 			var root = Main.request_inspector()
 			var inspector = Main.instance.pks_field_inspector.instantiate() as Control
 			root.add_child(inspector)
+			inspector.fieldinfo = field
 			inspector.field_name = field.name
 			inspector.field_type = field.type
 			inspector.set_anchors_preset(PRESET_FULL_RECT)
@@ -402,6 +413,12 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 		else:
 			control.set("text", celldata)
 			control.add_theme_color_override("font_color", Color.RED)
+	elif fieldinfo.type == Main.FieldType.OPTION:
+		var src = celldata
+		var elms = src.split(",")
+		var output = " ".join(elms)
+		control.set("text", output)
+		control.add_theme_color_override("font_color", Color.BLUE)
 	else:
 		control.set("text", celldata)
 		control.add_theme_color_override("font_color", Color.BLACK)

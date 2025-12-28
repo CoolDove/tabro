@@ -16,9 +16,10 @@ func normalize():
 	for row in records:
 		row.resize(fields_count)
 
-func add_field(name: String):
+func add_field(name: String, type:= Main.FieldType.STRING):
 	var field = FieldData.new()
 	field.name = name
+	field.type = type
 	field.width = 140
 	fields.append(field)
 	if _is_normalized:

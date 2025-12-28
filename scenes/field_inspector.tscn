@@ -5,6 +5,9 @@ resource_name = "FieldInspector"
 script/source = "extends Control
 class_name FieldInspector
 
+# Must set this before you use.
+var fieldinfo : FieldData
+
 var field_name :String:
 	get:
 		return lb_field_name.text
@@ -22,12 +25,26 @@ var field_type :Main.FieldType:
 @onready var tabc_field_settings :TabContainer= %FieldSettings
 @onready var footer = %Footer
 
+@onready var option_type_options_list :VBoxContainer= %OptionsList
+@onready var option_type_btn_add_new_option :Button= %BtnAddNewOption
+
 signal on_field_type_changed(type: Main.FieldType)
 
 func _ready():
 	for k in Main.FieldType.keys():
 		optbtn_field_type.add_item(k, Main.FieldType[k])
 	optbtn_field_type.item_selected.connect(_on_select_field_type)
+	option_type_btn_add_new_option.button_up.connect(func():
+		var option_editor = LineEdit.new()
+		option_editor.set_meta(\"option_idx\", fieldinfo.toption_options.size())
+		option_editor.custom_minimum_size.y = 32
+		option_type_options_list.add_child(option_editor)
+		fieldinfo.toption_options.append(\"\")
+		option_editor.text_changed.connect(func(text):
+			var option_idx = option_editor.get_meta(\"option_idx\")
+			fieldinfo.toption_options[option_idx] = text
+		)
+	)
 
 func _on_select_field_type(idx: int):
 	_set_option_type(idx)
@@ -76,7 +93,7 @@ size_flags_horizontal = 3
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-current_tab = 3
+current_tab = 1
 tabs_visible = false
 
 [node name="STRING" type="VBoxContainer" parent="VBoxContainer/FieldSettings"]
@@ -85,13 +102,32 @@ layout_mode = 2
 metadata/_tab_index = 0
 
 [node name="OPTION" type="VBoxContainer" parent="VBoxContainer/FieldSettings"]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
 [node name="CheckButton" type="CheckButton" parent="VBoxContainer/FieldSettings/OPTION"]
 layout_mode = 2
 text = "Multiple"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/FieldSettings/OPTION"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="OptionsList" type="VBoxContainer" parent="VBoxContainer/FieldSettings/OPTION/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Foot" type="HBoxContainer" parent="VBoxContainer/FieldSettings/OPTION"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="BtnAddNewOption" type="Button" parent="VBoxContainer/FieldSettings/OPTION/Foot"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Add A New Option"
 
 [node name="NUMBER" type="VBoxContainer" parent="VBoxContainer/FieldSettings"]
 visible = false
@@ -108,6 +144,7 @@ popup/item_1/text = "Float"
 popup/item_1/id = 1
 
 [node name="CODE" type="VBoxContainer" parent="VBoxContainer/FieldSettings"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 3
 

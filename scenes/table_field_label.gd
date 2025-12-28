@@ -63,7 +63,6 @@ func _gui_input(e):
 			if e.button_index == MOUSE_BUTTON_LEFT:
 				on_left_release.emit()
 			elif e.button_index == MOUSE_BUTTON_RIGHT:
-				print("emit release right")
 				on_right_release.emit()
 
 func _draw():
