@@ -17,9 +17,8 @@ var _hovering_on_drag = false
 var _ICONS = [
 	preload("res://resources/icons/field_type_string.tres"),
 	preload("res://resources/icons/field_type_option.tres"),
-	# preload("res://resources/icons/field_type_multi_option.tres"),
 	preload("res://resources/icons/field_type_number.tres"),
-	preload("res://resources/icons/field_type_unknown.tres"),
+	preload("res://resources/icons/field_type_code.tres"),
 	preload("res://resources/icons/field_type_unknown.tres"),
 ]
 

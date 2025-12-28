@@ -32,6 +32,18 @@ func _ready():
 				close()
 			)
 			_editor = te
+		_:
+			var te = _create_text_edit()
+			te.call_deferred("grab_focus")
+			te.focus_exited.connect(func():
+				if _canceled:
+					return
+				on_edit_finish.emit(te.text)
+				te.focus_mode = Control.FOCUS_NONE
+				te.editable = false
+				close()
+			)
+			_editor = te
 
 func _enter_tree():
 	if _editor != null:
@@ -61,7 +73,6 @@ signal gui_event_handle(e)
 func _gui_input(e):
 	gui_event_handle.emit(e)
 """
-
 	script.reload()
 	te.set_script(script)
 	te.context_menu_enabled = false

@@ -266,8 +266,8 @@ func _update_select(new_select_region: Rect2i):
 			var cell = select_region.position
 			var data_row_idx = cell.y
 			var data_col_idx = cell.x
-			var celledit = _get_celledit_from_hover_cell(hover_cell)
-			_open_cell_edit(celledit, data_row_idx, data_col_idx)
+			var cellctrl = _get_cellctrl_from_hover_cell(hover_cell)
+			_open_cell_edit(cellctrl, data_row_idx, data_col_idx)
 
 func _open_field_cell_edit(cell_control: Control, row: int, column: int):
 	pass
@@ -276,7 +276,7 @@ func _open_cell_edit(cell_control: Control, row: int, column: int):
 	# To instantiate the quick cell value editor.
 	var fieldinfo = fields[column]
 	if cell_control != null:
-		var edit = CellValueEdit.new(data.records[row][column], Main.FieldType.STRING) 
+		var edit = CellValueEdit.new(data.records[row][column], fieldinfo.type) 
 		edit.size = Vector2(fieldinfo.width+1, cell_height+1)
 		add_child(edit)
 		edit.global_position = cell_control.global_position + Vector2(-1, -1)
@@ -286,7 +286,7 @@ func _open_cell_edit(cell_control: Control, row: int, column: int):
 			call_deferred("refresh")
 		)
 
-func _get_celledit_from_hover_cell(hover: Vector2i) -> Control:
+func _get_cellctrl_from_hover_cell(hover: Vector2i) -> Control:
 	if data == null:
 		return null
 	if hover.x < 0 or hover.y < 0 or hover.y > data.records.size() - 1 or hover.x > fields.size() - 1:
@@ -334,6 +334,7 @@ func refresh():
 			inspector.on_field_type_changed.connect(func(type:Main.FieldType):
 				field.type = type
 				field_label.field_type = field.type
+				refresh()
 			)
 		)
 
@@ -344,19 +345,19 @@ func refresh():
 
 	for fidx in range(0, fields_count):
 		var field = fields[fidx]
-		var celledit = titleline.get_child(fidx)
+		var cellctrl = titleline.get_child(fidx)
 		# Set field edit
-		_initialize_celledit(celledit)
-		celledit.text = field.name
-		celledit.custom_minimum_size = Vector2(field.width, cell_height + 4)
-		celledit.on_width_changed.connect(func(width: float):
+		_initialize_cellctrl(cellctrl)
+		cellctrl.text = field.name
+		cellctrl.custom_minimum_size = Vector2(field.width, cell_height + 4)
+		cellctrl.on_width_changed.connect(func(width: float):
 			field.width = width
 			for record in grid.get_children():
 				var cell = record.get_child(fidx)
 				cell.custom_minimum_size.x = field.width
 		)
-		celledit.field_type = field.type
-		celledit.set_meta("field_index", fidx)
+		cellctrl.field_type = field.type
+		cellctrl.set_meta("field_index", fidx)
 		print("refresh field label: %s of type %s" % [field.name, field.type])
 
 	var visible_record_count = min(\
@@ -377,28 +378,45 @@ func refresh():
 			line.remove_child(line.get_child(-1))
 
 	for r in range(visible_begin, visible_record_count + visible_begin):
-		var row = data.records[r]
+		var rowdata = data.records[r]
 		var linectnr = grid.get_child(r - visible_begin)
-		# print("row: %s" % row)
+		# print("rowdata: %s" % rowdata)
 		for col in range(0, fields_count):
-			var celledit = linectnr.get_child(col)
+			var cellctrl = linectnr.get_child(col)
 			# Set cell edit
-			_initialize_celledit(celledit)
-			celledit.text = row[col]
-			celledit.custom_minimum_size = Vector2(fields[col].width, cell_height)
+			_initialize_cellctrl(cellctrl)
+			cellctrl.custom_minimum_size = Vector2(fields[col].width, cell_height)
+			_update_cell_value(cellctrl, col, r, rowdata[col])
+			# cellctrl.text = rowdata[col]
 	grid.queue_redraw()
 
-# You can always call this after either creating a celledit or getting from a pool 
-func _initialize_celledit(celledit: Label):
-	if celledit == null:
+func _update_cell_value(control: Control, column: int, row: int, celldata):
+	var fieldinfo = fields[column]
+	if fieldinfo.type == Main.FieldType.STRING:
+		control.set("text", celldata)
+		control.add_theme_color_override("font_color", Color.DARK_GRAY)
+	elif fieldinfo.type == Main.FieldType.NUMBER:
+		if celldata == null || celldata == "" || celldata.is_valid_int():
+			control.set("text", celldata.to_int())
+			control.add_theme_color_override("font_color", Color.DARK_GREEN)
+		else:
+			control.set("text", celldata)
+			control.add_theme_color_override("font_color", Color.RED)
+	else:
+		control.set("text", celldata)
+		control.add_theme_color_override("font_color", Color.BLACK)
+
+# You can always call this after either creating a cellctrl or getting from a pool 
+func _initialize_cellctrl(cellctrl: Label):
+	if cellctrl == null:
 		return
-	celledit.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	celledit.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	celledit.theme_type_variation = "TableCell"
-	celledit.autowrap_mode = TextServer.AUTOWRAP_OFF
-	celledit.clip_text = false # For batch text rendering
-	celledit.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	celledit.max_lines_visible = 1
+	cellctrl.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	cellctrl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	cellctrl.theme_type_variation = "TableCell"
+	cellctrl.autowrap_mode = TextServer.AUTOWRAP_OFF
+	cellctrl.clip_text = false # For batch text rendering
+	cellctrl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	cellctrl.max_lines_visible = 1
 
 func _recycle_free_line(line: HBoxContainer):
 	for e in line.get_children():
