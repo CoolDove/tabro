@@ -1,15 +1,17 @@
 extends Control
 class_name Main
 
-enum CellType { STRING=0, OPTION=1, MULTI_OPTION=2, NUMBER=3, UNKNOWN=4 }
+enum FieldType { STRING=0, OPTION=1, NUMBER=2, CODE=3, UNKNOWN }
 
 @onready var menu = $Window/MenuBar
 @onready var popupm_file = $Window/MenuBar/PM_File
 @onready var popupm_edit = $Window/MenuBar/PM_Edit
 @onready var main_panel = $Window/Body/MainPanel
-@onready var inspector_panel :VBoxContainer= $Window/Body/Inspector/Inspector
+@onready var inspector_panel = %Inspector
 
 static var instance : Main
+
+var pks_field_inspector = preload("res://scenes/field_inspector.tscn")
 
 func _ready():
 	instance = self
@@ -93,7 +95,7 @@ func _ready():
 	_open_data(empty_table)
 
 
-static func request_inspector() -> VBoxContainer:
+static func request_inspector() -> Control:
 	if instance == null:
 		return null
 	for child in instance.inspector_panel.get_children():

@@ -31,8 +31,9 @@ func add_record() -> PackedStringArray:
 	return row
 
 enum Version {
-	V00 = 1,
-	VLATEST = V00
+	V00,
+	V01,
+	VLATEST = V01
 }
 
 static func serialize(data: TabroData) -> String:
@@ -45,6 +46,7 @@ static func serialize(data: TabroData) -> String:
 	for field in data.fields:
 		var fieldsave = {
 			"name" = field.name,
+			"type" = field.type,
 			"width" = field.width,
 		}
 		dfields.append(fieldsave)
@@ -70,6 +72,8 @@ static func deserialize(raw: String) -> TabroData:
 	match version as Version:
 		Version.V00:
 			return _deserialize_body_v00(body)
+		Version.V01:
+			return _deserialize_body_v01(body)
 		_:
 			return null
 
@@ -81,6 +85,27 @@ static func _deserialize_body_v00(jobj) -> TabroData:
 		var f = FieldData.new()
 		f.name = field["name"]
 		f.width = field["width"]
+		dfields.append(f)
+	for record in jobj["records"]:
+		var rowdata : PackedStringArray
+		for row in record:
+			rowdata.append(row)
+		drecords.append(rowdata)
+	var data = TabroData.new()
+	data.fields = dfields
+	data.records = drecords
+	return data
+
+static func _deserialize_body_v01(jobj) -> TabroData:
+	var dfields : Array[FieldData]
+	var drecords : Array[PackedStringArray]
+	var jfields = jobj["fields"]
+	for field in jfields:
+		var f = FieldData.new()
+		f.name = field["name"]
+		f.type = field["type"]
+		f.width = field["width"]
+		print("deserlz field: %s of type %s" % [f.name, f.type])
 		dfields.append(f)
 	for record in jobj["records"]:
 		var rowdata : PackedStringArray

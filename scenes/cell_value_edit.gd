@@ -2,7 +2,7 @@ extends Control
 class_name CellValueEdit
 
 @export var initial_value : Variant
-@export var cell_type : Main.CellType
+@export var field_type : Main.FieldType
 
 var _editor : Control
 
@@ -14,13 +14,13 @@ signal on_edit_cancel
 func close():
 	queue_free()
 
-func _init(value: Variant = null, type:Main.CellType=Main.CellType.STRING):
+func _init(value: Variant = null, type:Main.FieldType=Main.FieldType.STRING):
 	self.initial_value = value
-	self.cell_type = type
+	self.field_type = type
 
 func _ready():
-	match cell_type:
-		Main.CellType.STRING:
+	match field_type:
+		Main.FieldType.STRING:
 			var te = _create_text_edit()
 			te.call_deferred("grab_focus")
 			te.focus_exited.connect(func():

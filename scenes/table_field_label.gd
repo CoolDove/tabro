@@ -17,17 +17,16 @@ var _hovering_on_drag = false
 var _ICONS = [
 	preload("res://resources/icons/field_type_string.tres"),
 	preload("res://resources/icons/field_type_option.tres"),
-	preload("res://resources/icons/field_type_multi_option.tres"),
+	# preload("res://resources/icons/field_type_multi_option.tres"),
 	preload("res://resources/icons/field_type_number.tres"),
+	preload("res://resources/icons/field_type_unknown.tres"),
+	preload("res://resources/icons/field_type_unknown.tres"),
 ]
 
-var cell_type :Main.CellType:
-	get:
-		return _cell_type
+var field_type :Main.FieldType:
 	set(value):
-		_cell_type = value
+		field_type = value
 		type_icon.texture = _ICONS[value]
-var _cell_type = Main.CellType.STRING
 
 func _ready():
 	print("ready")

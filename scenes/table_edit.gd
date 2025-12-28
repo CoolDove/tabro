@@ -276,7 +276,7 @@ func _open_cell_edit(cell_control: Control, row: int, column: int):
 	# To instantiate the quick cell value editor.
 	var fieldinfo = fields[column]
 	if cell_control != null:
-		var edit = CellValueEdit.new(data.records[row][column], Main.CellType.STRING) 
+		var edit = CellValueEdit.new(data.records[row][column], Main.FieldType.STRING) 
 		edit.size = Vector2(fieldinfo.width+1, cell_height+1)
 		add_child(edit)
 		edit.global_position = cell_control.global_position + Vector2(-1, -1)
@@ -316,9 +316,25 @@ func refresh():
 			var field_index = field_label.get_meta("field_index")
 			var field = fields[field_index]
 			field.type += 1
-			if field.type == Main.CellType.UNKNOWN:
+			if field.type == Main.FieldType.UNKNOWN:
 				field.type = 0
-			field_label.cell_type = field.type
+			field_label.field_type = field.type
+		)
+		field_label.on_left_release.connect(func():
+			var field_index = field_label.get_meta("field_index")
+			var field = fields[field_index]
+			# You can add_child to this inspector.
+			# But maybe not for a normal value cell.
+			var root = Main.request_inspector()
+			var inspector = Main.instance.pks_field_inspector.instantiate() as Control
+			root.add_child(inspector)
+			inspector.field_name = field.name
+			inspector.field_type = field.type
+			inspector.set_anchors_preset(PRESET_FULL_RECT)
+			inspector.on_field_type_changed.connect(func(type:Main.FieldType):
+				field.type = type
+				field_label.field_type = field.type
+			)
 		)
 
 	for i in range(0, titleline.get_child_count() - fields_count):
@@ -339,8 +355,9 @@ func refresh():
 				var cell = record.get_child(fidx)
 				cell.custom_minimum_size.x = field.width
 		)
-		celledit.cell_type = field.type
+		celledit.field_type = field.type
 		celledit.set_meta("field_index", fidx)
+		print("refresh field label: %s of type %s" % [field.name, field.type])
 
 	var visible_record_count = min(\
 			visible_end - visible_begin, data.records.size() - visible_begin
