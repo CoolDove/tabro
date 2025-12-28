@@ -16,7 +16,7 @@ func normalize():
 	for row in records:
 		row.resize(fields_count)
 
-func add_field(name: String, type:= Main.FieldType.STRING):
+func add_field(name: String, type:= Main.FieldType.STRING) -> FieldData:
 	var field = FieldData.new()
 	field.name = name
 	field.type = type
@@ -24,6 +24,7 @@ func add_field(name: String, type:= Main.FieldType.STRING):
 	fields.append(field)
 	if _is_normalized:
 		normalize()
+	return field
 
 func add_record() -> PackedStringArray:
 	var row : PackedStringArray
