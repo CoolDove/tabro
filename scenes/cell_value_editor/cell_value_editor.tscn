@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3 uid="uid://ch2j3d12ic74u"]
+
+[sub_resource type="GDScript" id="GDScript_b6als"]
+resource_name = "CellValueEditorFallback"
+script/source = "extends LineEdit
+
+func _ready() -> void:
+	text_changed.connect(func(t):
+		print(\"text changed: %s\" % t)
+	)
+	focus_exited.connect(queue_free)
+	call_deferred(\"grab_focus\")
+
+func _input(e: InputEvent) -> void:
+	if e is InputEventMouseButton:
+		if not Rect2(Vector2.ZERO, size).has_point(get_local_mouse_position()):
+			queue_free()
+
+func _gui_input(e: InputEvent) -> void:
+	if e is InputEventKey:
+		if e.keycode == KEY_ENTER:
+			queue_free()
+		elif e.keycode == KEY_ESCAPE:
+			queue_free()
+"
+
+[node name="CellValueEditor" type="LineEdit"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_b6als")

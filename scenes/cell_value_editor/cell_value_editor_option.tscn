@@ -1,0 +1,27 @@
+[gd_scene load_steps=2 format=3 uid="uid://bv4185vpuduyr"]
+
+[sub_resource type="GDScript" id="GDScript_8xc3v"]
+resource_name = "CellValueEditorOption"
+script/source = "extends OptionButton
+
+func _ready() -> void:
+	focus_exited.connect(func():
+		queue_free()
+	)
+	selected = -1;
+	call_deferred(\"show_popup\")
+
+func _input(e: InputEvent) -> void:
+	if e is InputEventMouseButton:
+		print(\"received a mouse btn event when size %s, lmpos: %s.\" % [size, get_local_mouse_position()])
+		if not Rect2(Vector2.ZERO, size).has_point(get_local_mouse_position()):
+			queue_free()
+"
+
+[node name="CellValueEditorOption" type="OptionButton"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_8xc3v")

@@ -277,25 +277,26 @@ func _open_cell_edit(cell_control: Control, row: int, column: int):
 	var fieldinfo = fields[column]
 	if cell_control != null:
 		if fieldinfo.type == Main.FieldType.OPTION:
-			print("Options we have: ", fieldinfo.toption_options)
-			var options = fieldinfo.toption_options
-			var optbtn = OptionButton.new()
-			for o in options:
-				optbtn.add_item(o)
-			add_child(optbtn)
-			optbtn.global_position = cell_control.global_position + Vector2(-1, -1)
-			optbtn.size = Vector2(fieldinfo.width+1, cell_height+1)
-			optbtn.item_selected.connect(func(idx:int):
+			var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor_option.tscn").instantiate()
+			add_child(editor)
+			editor.size = Vector2(fieldinfo.width+1, cell_height+1)
+			editor.global_position = cell_control.global_position + Vector2(-1, -1)
+			for o in fieldinfo.toption_options: editor.add_item(o)
+			editor.item_selected.connect(func(idx:int):
 				var item = fieldinfo.toption_options[idx]
 				data.records[row][column] = item
 				_update_cell_value(cell_control, column, row, item)
-				optbtn.queue_free()
+				editor.queue_free()
 			)
-			optbtn.focus_exited.connect(func():
-				optbtn.queue_free()
+		elif fieldinfo.type == Main.FieldType.NUMBER:
+			var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor.tscn").instantiate()
+			add_child(editor)
+			editor.size = Vector2(fieldinfo.width+1, cell_height+1)
+			editor.global_position = cell_control.global_position + Vector2(-1, -1)
+			editor.text = "%s" % data.records[row][column]
+			editor.text_changed.connect(func(text:String):
+				data.records[row][column] = text
 			)
-			optbtn.call_deferred("show_popup")
-			optbtn.selected = -1
 		else:
 			var edit = CellValueEdit.new(data.records[row][column], fieldinfo.type) 
 			add_child(edit)
