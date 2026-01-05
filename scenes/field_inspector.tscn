@@ -69,15 +69,32 @@ func _init_panel_option():
 		_option_type_append_option_editor(option_index)
 
 func _option_type_append_option_editor(option_index: int):
+	var box = HBoxContainer.new()
+	box.set_meta(\"option_idx\", option_index)
+	box.custom_minimum_size.y = 32
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
 	var option_editor = LineEdit.new()
 	option_editor.set_meta(\"option_idx\", option_index)
 	option_editor.custom_minimum_size.y = 32
+	option_editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	option_editor.text = fieldinfo.toption_options[option_index]
 	option_editor.text_changed.connect(func(text):
-		var option_idx = option_editor.get_meta(\"option_idx\")
+		var option_idx = box.get_meta(\"option_idx\")
 		fieldinfo.toption_options[option_idx] = text
 	)
-	option_type_options_list.add_child(option_editor)
+
+	var btn_delete = Button.new()
+	btn_delete.text = \"DEL\"
+	btn_delete.custom_minimum_size = Vector2i(32,32)
+	btn_delete.pressed.connect(func():
+		var option_idx = box.get_meta(\"option_idx\")
+		fieldinfo.toption_options.remove_at(option_idx)
+		_init_panel_option()
+	)
+	box.add_child(option_editor)
+	box.add_child(btn_delete)
+	option_type_options_list.add_child(box)
 "
 
 [node name="FieldInspector" type="Control"]
