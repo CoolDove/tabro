@@ -34,25 +34,50 @@ func _ready():
 	for k in Main.FieldType.keys():
 		optbtn_field_type.add_item(k, Main.FieldType[k])
 	optbtn_field_type.item_selected.connect(_on_select_field_type)
+
+	tabc_field_settings.tab_changed.connect(_on_tab_open)
+
 	option_type_btn_add_new_option.button_up.connect(func():
-		var option_editor = LineEdit.new()
-		option_editor.set_meta(\"option_idx\", fieldinfo.toption_options.size())
-		option_editor.custom_minimum_size.y = 32
-		option_type_options_list.add_child(option_editor)
-		fieldinfo.toption_options.append(\"\")
-		option_editor.text_changed.connect(func(text):
-			var option_idx = option_editor.get_meta(\"option_idx\")
-			fieldinfo.toption_options[option_idx] = text
-		)
+		var option_index = fieldinfo.toption_options.size()
+		fieldinfo.toption_options.append(\"Option%s\" % option_index)
+		_option_type_append_option_editor(option_index)
 	)
+
+func _on_tab_open(tab_index: int):
+	print(\"tab open: %s\" % tab_index)
+	var tabname = tabc_field_settings.get_child(tab_index).name
+	match tabname:
+		\"OPTION\":
+			_init_panel_option()
+		_:
+			print(\"Fallback tab open\")
 
 func _on_select_field_type(idx: int):
 	_set_option_type(idx)
 
 func _set_option_type(idx: int):
 	on_field_type_changed.emit(idx)
-	tabc_field_settings.current_tab = idx
+	if tabc_field_settings.current_tab != idx:
+		tabc_field_settings.current_tab = idx
+	else:
+		tabc_field_settings.tab_changed.emit(idx) # Manually emit the signal to refresh panel.
 	print(\"set option: %s\" % idx)
+
+func _init_panel_option():
+	for c in option_type_options_list.get_children(): c.queue_free()
+	for option_index in range(0, fieldinfo.toption_options.size()):
+		_option_type_append_option_editor(option_index)
+
+func _option_type_append_option_editor(option_index: int):
+	var option_editor = LineEdit.new()
+	option_editor.set_meta(\"option_idx\", option_index)
+	option_editor.custom_minimum_size.y = 32
+	option_editor.text = fieldinfo.toption_options[option_index]
+	option_editor.text_changed.connect(func(text):
+		var option_idx = option_editor.get_meta(\"option_idx\")
+		fieldinfo.toption_options[option_idx] = text
+	)
+	option_type_options_list.add_child(option_editor)
 "
 
 [node name="FieldInspector" type="Control"]

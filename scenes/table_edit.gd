@@ -286,13 +286,16 @@ func _open_cell_edit(cell_control: Control, row: int, column: int):
 			optbtn.global_position = cell_control.global_position + Vector2(-1, -1)
 			optbtn.size = Vector2(fieldinfo.width+1, cell_height+1)
 			optbtn.item_selected.connect(func(idx:int):
-				data.records[row][column] = fieldinfo.toption_options[idx]
-				_update_cell_value(cell_control, column, row,
-						fieldinfo.toption_options[idx])
+				var item = fieldinfo.toption_options[idx]
+				data.records[row][column] = item
+				_update_cell_value(cell_control, column, row, item)
+				optbtn.queue_free()
 			)
 			optbtn.focus_exited.connect(func():
 				optbtn.queue_free()
 			)
+			optbtn.call_deferred("show_popup")
+			optbtn.selected = -1
 		else:
 			var edit = CellValueEdit.new(data.records[row][column], fieldinfo.type) 
 			add_child(edit)
