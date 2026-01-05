@@ -5,6 +5,7 @@ resource_name = "CellValueEditorOption"
 script/source = "extends OptionButton
 
 func _ready() -> void:
+	add_item(\"\", 0) # Default item
 	focus_exited.connect(func():
 		queue_free()
 	)
@@ -15,7 +16,8 @@ func _input(e: InputEvent) -> void:
 	if e is InputEventMouseButton:
 		print(\"received a mouse btn event when size %s, lmpos: %s.\" % [size, get_local_mouse_position()])
 		if not Rect2(Vector2.ZERO, size).has_point(get_local_mouse_position()):
-			queue_free()
+			print(\"should free this editor\")
+			call_deferred(\"queue_free\")
 "
 
 [node name="CellValueEditorOption" type="OptionButton"]
@@ -24,4 +26,5 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+allow_reselect = true
 script = SubResource("GDScript_8xc3v")

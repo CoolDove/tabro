@@ -202,9 +202,14 @@ func _gui_input(event):
 		else:
 			match event.button_index:
 				MOUSE_BUTTON_LEFT:
-					if event.is_pressed() and is_hover_cell_valid:
-						select_anchor = hover_cell
-						_update_select(Rect2i(hover_cell, Vector2i.ZERO))
+					_update_hover()
+					if is_hover_cell_valid:
+						if event.is_pressed():
+							select_anchor = hover_cell
+							print("update select: ", hover_cell)
+							_update_select(Rect2i(hover_cell, Vector2i.ZERO))
+						else:
+							_open_cell_edit(hover_cell.y, hover_cell.x)
 		_update_hover()
 
 var _watch_mem_interval : float
@@ -260,19 +265,9 @@ func _update_hover():
 func _update_select(new_select_region: Rect2i):
 	select_region = new_select_region
 	grid.queue_redraw()
-	if Main.instance:
-		# var inspector = Main.request_inspector() # You can add_child to this inspector. But maybe not for a normal value cell.
-		if new_select_region.size == Vector2i.ZERO:
-			var cell = select_region.position
-			var data_row_idx = cell.y
-			var data_col_idx = cell.x
-			var cellctrl = _get_cellctrl_from_hover_cell(hover_cell)
-			_open_cell_edit(cellctrl, data_row_idx, data_col_idx)
 
-func _open_field_cell_edit(cell_control: Control, row: int, column: int):
-	pass
-
-func _open_cell_edit(cell_control: Control, row: int, column: int):
+func _open_cell_edit(row: int, column: int):
+	var cell_control = _get_cellctrl_from_hover_cell(column, row)
 	# To instantiate the quick cell value editor.
 	var fieldinfo = fields[column]
 	if cell_control != null:
@@ -283,9 +278,12 @@ func _open_cell_edit(cell_control: Control, row: int, column: int):
 			editor.global_position = cell_control.global_position + Vector2(-1, -1)
 			for o in fieldinfo.toption_options: editor.add_item(o)
 			editor.item_selected.connect(func(idx:int):
-				var item = fieldinfo.toption_options[idx]
-				data.records[row][column] = item
-				_update_cell_value(cell_control, column, row, item)
+				var option_idx = idx - 1
+				var value = ""
+				if option_idx > -1:
+					value = fieldinfo.toption_options[option_idx]
+				data.records[row][column] = value
+				_update_cell_value(cell_control, column, row, value)
 				editor.queue_free()
 			)
 		elif fieldinfo.type == Main.FieldType.NUMBER:
@@ -308,15 +306,15 @@ func _open_cell_edit(cell_control: Control, row: int, column: int):
 				call_deferred("refresh")
 			)
 
-func _get_cellctrl_from_hover_cell(hover: Vector2i) -> Control:
+func _get_cellctrl_from_hover_cell(column: int, row: int) -> Control:
 	if data == null:
 		return null
-	if hover.x < 0 or hover.y < 0 or hover.y > data.records.size() - 1 or hover.x > fields.size() - 1:
+	if column < 0 or row < 0 or row > data.records.size() - 1 or column > fields.size() - 1:
 		return null
-	var linectnr = grid.get_child(hover.y - visible_begin)
+	var linectnr = grid.get_child(row - visible_begin)
 	if linectnr == null:
 		return null
-	return linectnr.get_child(hover.x) as Control
+	return linectnr.get_child(column) as Control
 
 func refresh():
 	if data == null:
@@ -381,7 +379,7 @@ func refresh():
 		)
 		cellctrl.field_type = field.type
 		cellctrl.set_meta("field_index", fidx)
-		print("refresh field label: %s of type %s" % [field.name, field.type])
+		#print("refresh field label: %s of type %s" % [field.name, field.type])
 
 	var visible_record_count = min(\
 			visible_end - visible_begin, data.records.size() - visible_begin
