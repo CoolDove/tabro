@@ -14,10 +14,8 @@ func _ready() -> void:
 
 func _input(e: InputEvent) -> void:
 	if e is InputEventMouseButton:
-		print(\"received a mouse btn event when size %s, lmpos: %s.\" % [size, get_local_mouse_position()])
 		if not Rect2(Vector2.ZERO, size).has_point(get_local_mouse_position()):
-			print(\"should free this editor\")
-			call_deferred(\"queue_free\")
+			queue_free()
 "
 
 [node name="CellValueEditorOption" type="OptionButton"]

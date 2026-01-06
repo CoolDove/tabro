@@ -429,6 +429,27 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 		var output = " ".join(elms)
 		control.set("text", output)
 		control.add_theme_color_override("font_color", Color.BLUE)
+	elif fieldinfo.type == Main.FieldType.CODE:
+		var script = GDScript.new()
+		script.source_code = fieldinfo.tcode_code
+		#TODO: Cache this script.
+		var err = script.reload()
+		var ok = false
+		if err == 0:
+			var process_func = script.get_script_method_list().find_custom(
+				func(v): return v["name"] == "process_value"
+			)
+			if process_func > -1:
+				var result = script.call("process_value", celldata)
+				control.set("text", result)
+				control.add_theme_color_override("font_color", Color.DARK_CYAN)
+				ok = true
+		else:
+			print("Script compile error: %s" % err)
+
+		if not ok:
+			control.set("text", celldata)
+			control.add_theme_color_override("font_color", Color.DARK_CYAN)
 	else:
 		control.set("text", celldata)
 		control.add_theme_color_override("font_color", Color.BLACK)

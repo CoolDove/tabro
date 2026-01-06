@@ -30,19 +30,23 @@ var field_type :Main.FieldType:
 @onready var option_type_options_list :VBoxContainer= %OptionsList
 @onready var option_type_btn_add_new_option :Button= %BtnAddNewOption
 
+@onready var code_type_code_editor :TextEdit= %CodeEditor
+
 signal on_field_type_changed(type: Main.FieldType)
 
 func _ready():
 	for k in Main.FieldType.keys():
 		optbtn_field_type.add_item(k, Main.FieldType[k])
 	optbtn_field_type.item_selected.connect(_on_select_field_type)
-
 	tabc_field_settings.tab_changed.connect(_on_tab_open)
 
 	option_type_btn_add_new_option.button_up.connect(func():
 		var option_index = fieldinfo.toption_options.size()
 		fieldinfo.toption_options.append(\"Option%s\" % option_index)
 		_option_type_append_option_editor(option_index)
+	)
+	code_type_code_editor.text_changed.connect(func():
+		fieldinfo.tcode_code = code_type_code_editor.text
 	)
 
 func _on_tab_open(tab_index: int):
@@ -51,6 +55,8 @@ func _on_tab_open(tab_index: int):
 	match tabname:
 		\"OPTION\":
 			_init_panel_option()
+		\"CODE\":
+			code_type_code_editor.text = fieldinfo.tcode_code
 		_:
 			print(\"Fallback tab open\")
 
@@ -212,6 +218,7 @@ layout_mode = 2
 metadata/_tab_index = 3
 
 [node name="CodeEditor" type="TextEdit" parent="VBoxContainer/FieldSettings/CODE"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 256)
 layout_mode = 2
 theme_override_fonts/font = ExtResource("1_vriwu")

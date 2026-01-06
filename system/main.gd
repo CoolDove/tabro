@@ -92,6 +92,13 @@ func _ready():
 	field_flags.toption_options.append("Dove")
 	field_flags.toption_options.append("Spike")
 	empty_table.add_field("description")
+
+	var field_code = empty_table.add_field("code", Main.FieldType.CODE)
+	field_code.tcode_code = \
+"""
+static func process_value(value: String):
+	return "Hello: %s" % [ value ]
+"""
 	empty_table.add_record()
 	empty_table.add_record()
 	empty_table.add_record()
