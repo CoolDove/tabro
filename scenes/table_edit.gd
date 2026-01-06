@@ -294,6 +294,7 @@ func _open_cell_edit(row: int, column: int):
 			editor.text = "%s" % data.records[row][column]
 			editor.text_changed.connect(func(text:String):
 				data.records[row][column] = text
+				call_deferred("refresh")
 			)
 		else:
 			var edit = CellValueEdit.new(data.records[row][column], fieldinfo.type) 
