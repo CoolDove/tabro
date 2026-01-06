@@ -35,7 +35,8 @@ func add_record() -> PackedStringArray:
 enum Version {
 	V00,
 	V01,
-	VLATEST = V01
+	V02,
+	VLATEST = V02 # Update this when you add a new version.
 }
 
 static func serialize(data: TabroData) -> String:
@@ -46,12 +47,12 @@ static func serialize(data: TabroData) -> String:
 	# Nerver change above
 	var dfields = []
 	for field in data.fields:
-		var fieldsave = {
-			"name" = field.name,
-			"type" = field.type,
-			"width" = field.width,
-		}
-		dfields.append(fieldsave)
+		var dict : Dictionary
+		for property in field.get_property_list():
+			if property["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE > 0:
+				var pname = property["name"]
+				dict[pname] = field.get(pname)
+		dfields.append(dict)
 	body["fields"] = dfields
 	var drecords : Array[PackedStringArray]
 	for record in data.records:
@@ -60,7 +61,7 @@ static func serialize(data: TabroData) -> String:
 			row.append(cell)
 		drecords.append(row)
 	body["records"] = drecords
-	return JSON.stringify(save)
+	return JSON.stringify(save, "\t")
 
 static func deserialize(raw: String) -> TabroData:
 	var save = JSON.parse_string(raw)
@@ -76,6 +77,8 @@ static func deserialize(raw: String) -> TabroData:
 			return _deserialize_body_v00(body)
 		Version.V01:
 			return _deserialize_body_v01(body)
+		Version.V02:
+			return _deserialize_body_v02(body)
 		_:
 			return null
 
@@ -108,6 +111,25 @@ static func _deserialize_body_v01(jobj) -> TabroData:
 		f.type = field["type"]
 		f.width = field["width"]
 		print("deserlz field: %s of type %s" % [f.name, f.type])
+		dfields.append(f)
+	for record in jobj["records"]:
+		var rowdata : PackedStringArray
+		for row in record:
+			rowdata.append(row)
+		drecords.append(rowdata)
+	var data = TabroData.new()
+	data.fields = dfields
+	data.records = drecords
+	return data
+
+static func _deserialize_body_v02(jobj) -> TabroData:
+	var dfields : Array[FieldData]
+	var drecords : Array[PackedStringArray]
+	var jfields = jobj["fields"]
+	for field in jfields:
+		var f = FieldData.new()
+		for jf in field:
+			f.set(jf, field[jf])
 		dfields.append(f)
 	for record in jobj["records"]:
 		var rowdata : PackedStringArray

@@ -9,7 +9,7 @@ func _ready() -> void:
 	focus_exited.connect(func():
 		queue_free()
 	)
-	selected = -1;
+	#selected = -1;
 	call_deferred(\"show_popup\")
 
 func _input(e: InputEvent) -> void:

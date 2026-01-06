@@ -28,7 +28,6 @@ var field_type :Main.FieldType:
 		type_icon.texture = _ICONS[value]
 
 func _ready():
-	print("ready")
 	resize_dragger = Control.new()
 	resize_dragger.name = "ResizeDragger"
 	# resize_dragger.color = Color.GREEN

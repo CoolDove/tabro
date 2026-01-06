@@ -73,7 +73,8 @@ func _set_option_type(idx: int):
 
 func _init_panel_option():
 	for c in option_type_options_list.get_children(): c.queue_free()
-	for option_index in range(0, fieldinfo.toption_options.size()):
+	var options = fieldinfo.toption_options
+	for option_index in range(0, options.size()):
 		_option_type_append_option_editor(option_index)
 
 func _option_type_append_option_editor(option_index: int):

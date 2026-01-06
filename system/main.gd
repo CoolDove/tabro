@@ -133,6 +133,9 @@ func action_open_file():
 	fdialog.popup_centered_ratio()
 
 func clear_main_panel():
+	var inspector = request_inspector()
+	if inspector != null:
+		for c in inspector.get_children(): c.queue_free()
 	for c in main_panel.get_children():
 		c.queue_free()
 func add_to_main_panel(control: Control):
