@@ -68,15 +68,6 @@ corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 anti_aliasing_size = 0.5
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_idseb"]
-bg_color = Color(0.99607843, 0.99607843, 0.99607843, 1)
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_coj2h"]
-content_margin_left = 6.0
-content_margin_top = 2.0
-content_margin_right = 2.0
-content_margin_bottom = 2.0
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2vkvc"]
 content_margin_left = 6.0
 content_margin_top = 4.0
@@ -93,6 +84,15 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_idseb"]
+bg_color = Color(0.99607843, 0.99607843, 0.99607843, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_coj2h"]
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_coj2h"]
 content_margin_left = 6.0
@@ -156,6 +156,12 @@ HScrollBar/styles/scroll = SubResource("StyleBoxFlat_d0d7a")
 HScrollBar/styles/scroll_focus = SubResource("StyleBoxFlat_dlupd")
 HoverHighlightMark/base_type = &"Panel"
 HoverHighlightMark/styles/panel = SubResource("StyleBoxFlat_ubs4u")
+LineEdit/colors/caret_color = Color(0.20870987, 0.2087102, 0.20871067, 1)
+LineEdit/colors/font_color = Color(0, 0, 0, 1)
+LineEdit/colors/font_placeholder_color = Color(0.3647059, 0.3647059, 0.3647059, 0.44705883)
+LineEdit/styles/focus = SubResource("StyleBoxFlat_2vkvc")
+LineEdit/styles/normal = SubResource("StyleBoxFlat_2vkvc")
+LineEdit/styles/read_only = SubResource("StyleBoxFlat_2vkvc")
 Panel/styles/panel = SubResource("StyleBoxFlat_idseb")
 RichTextLabel/styles/focus = ExtResource("1_coj2h")
 RichTextLabel/styles/normal = ExtResource("1_coj2h")

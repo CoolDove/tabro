@@ -163,7 +163,7 @@ size_flags_horizontal = 3
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-current_tab = 3
+current_tab = 2
 tabs_visible = false
 
 [node name="STRING" type="VBoxContainer" parent="VBoxContainer/FieldSettings"]
@@ -201,12 +201,21 @@ size_flags_horizontal = 3
 text = "Add A New Option"
 
 [node name="NUMBER" type="VBoxContainer" parent="VBoxContainer/FieldSettings"]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 
-[node name="NumberType" type="OptionButton" parent="VBoxContainer/FieldSettings/NUMBER"]
+[node name="LbdNumberType" type="HBoxContainer" parent="VBoxContainer/FieldSettings/NUMBER"]
 layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/FieldSettings/NUMBER/LbdNumberType"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Number Type"
+clip_text = true
+
+[node name="NumberType" type="OptionButton" parent="VBoxContainer/FieldSettings/NUMBER/LbdNumberType"]
+layout_mode = 2
+size_flags_horizontal = 3
 selected = 0
 item_count = 2
 popup/item_0/text = "Integer"
@@ -215,6 +224,7 @@ popup/item_1/text = "Float"
 popup/item_1/id = 1
 
 [node name="CODE" type="VBoxContainer" parent="VBoxContainer/FieldSettings"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 3
 

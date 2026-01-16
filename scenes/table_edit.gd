@@ -287,9 +287,9 @@ func _open_cell_edit(row: int, column: int):
 				editor.queue_free()
 			)
 		elif fieldinfo.type == Main.FieldType.NUMBER:
-			var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor.tscn").instantiate()
+			var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor.tscn").instantiate() as LineEdit
 			add_child(editor)
-			editor.size = Vector2(fieldinfo.width+1, cell_height+1)
+			editor.set_deferred("size", Vector2(fieldinfo.width+1, cell_height+1))
 			editor.global_position = cell_control.global_position + Vector2(-1, -1)
 			editor.text = "%s" % data.records[row][column]
 			editor.text_changed.connect(func(text:String):
@@ -297,13 +297,13 @@ func _open_cell_edit(row: int, column: int):
 				call_deferred("refresh")
 			)
 		else:
-			var edit = CellValueEdit.new(data.records[row][column], fieldinfo.type) 
-			add_child(edit)
-			edit.size = Vector2(fieldinfo.width+1, cell_height+1)
-			edit.global_position = cell_control.global_position + Vector2(-1, -1)
-			cell_value_edit = edit
-			edit.on_edit_finish.connect(func(value):
-				data.records[row][column] = value
+			var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor.tscn").instantiate() as LineEdit
+			add_child(editor)
+			editor.set_deferred("size", Vector2(fieldinfo.width+1, cell_height+1))
+			editor.global_position = cell_control.global_position + Vector2(-1, -1)
+			editor.text = "%s" % data.records[row][column]
+			editor.text_changed.connect(func(text:String):
+				data.records[row][column] = text
 				call_deferred("refresh")
 			)
 
@@ -416,7 +416,7 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 	var fieldinfo = fields[column]
 	if fieldinfo.type == Main.FieldType.STRING:
 		control.set("text", celldata)
-		control.add_theme_color_override("font_color", Color.DARK_GRAY)
+		control.add_theme_color_override("font_color", Color.DIM_GRAY)
 	elif fieldinfo.type == Main.FieldType.NUMBER:
 		if celldata == null || celldata == "" || celldata.is_valid_int():
 			control.set("text", celldata.to_int())
