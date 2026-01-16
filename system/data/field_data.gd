@@ -15,3 +15,21 @@ class_name FieldData
 @export var toption_multiple : bool
 
 @export var tcode_code : String
+
+
+static func parse_standardized_options(data: String) -> Array:
+	var options = []
+	var valid = true
+	if valid and data.begins_with(">"):
+		var raw_indexes = data.substr(1).split(",")
+		for index in raw_indexes:
+			if index.is_valid_int():
+				var idx = index.to_int()
+				options.append(idx)
+			else:
+				valid = false
+				break
+	if valid:
+		return options
+	else:
+		return []

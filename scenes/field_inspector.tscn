@@ -30,9 +30,8 @@ var field_type :Main.FieldType:
 @onready var option_type_options_list :VBoxContainer= %OptionsList
 @onready var option_type_btn_add_new_option :Button= %BtnAddNewOption
 
-@onready var code_type_code_editor :TextEdit= %CodeEditor
-
 signal on_field_type_changed(type: Main.FieldType)
+signal on_field_option_changed
 
 func _ready():
 	for k in Main.FieldType.keys():
@@ -44,9 +43,18 @@ func _ready():
 		var option_index = fieldinfo.toption_options.size()
 		fieldinfo.toption_options.append(\"Option%s\" % option_index)
 		_option_type_append_option_editor(option_index)
+		on_field_option_changed.emit()
 	)
-	code_type_code_editor.text_changed.connect(func():
-		fieldinfo.tcode_code = code_type_code_editor.text
+
+	var code_editor = %CodeEditor
+	code_editor.text_changed.connect(func():
+		fieldinfo.tcode_code = code_editor.text
+		on_field_option_changed.emit()
+	)
+
+	%Options_Multiple.toggled.connect(func(on):
+		fieldinfo.toption_multiple = on
+		on_field_option_changed.emit()
 	)
 
 func _on_tab_open(tab_index: int):
@@ -56,7 +64,7 @@ func _on_tab_open(tab_index: int):
 		\"OPTION\":
 			_init_panel_option()
 		\"CODE\":
-			code_type_code_editor.text = fieldinfo.tcode_code
+			_init_panel_code()
 		_:
 			print(\"Fallback tab open\")
 
@@ -65,6 +73,7 @@ func _on_select_field_type(idx: int):
 
 func _set_option_type(idx: int):
 	on_field_type_changed.emit(idx)
+	on_field_option_changed.emit()
 	if tabc_field_settings.current_tab != idx:
 		tabc_field_settings.current_tab = idx
 	else:
@@ -72,10 +81,14 @@ func _set_option_type(idx: int):
 	print(\"set option: %s\" % idx)
 
 func _init_panel_option():
+	%Options_Multiple.set_pressed_no_signal(fieldinfo.toption_multiple)
 	for c in option_type_options_list.get_children(): c.queue_free()
 	var options = fieldinfo.toption_options
 	for option_index in range(0, options.size()):
 		_option_type_append_option_editor(option_index)
+
+func _init_panel_code():
+	%CodeEditor.text = fieldinfo.tcode_code
 
 func _option_type_append_option_editor(option_index: int):
 	var box = HBoxContainer.new()
@@ -91,6 +104,7 @@ func _option_type_append_option_editor(option_index: int):
 	option_editor.text_changed.connect(func(text):
 		var option_idx = box.get_meta(\"option_idx\")
 		fieldinfo.toption_options[option_idx] = text
+		on_field_option_changed.emit()
 	)
 
 	var btn_delete = Button.new()
@@ -100,6 +114,7 @@ func _option_type_append_option_editor(option_index: int):
 		var option_idx = box.get_meta(\"option_idx\")
 		fieldinfo.toption_options.remove_at(option_idx)
 		_init_panel_option()
+		on_field_option_changed.emit()
 	)
 	box.add_child(option_editor)
 	box.add_child(btn_delete)
@@ -163,7 +178,7 @@ size_flags_horizontal = 3
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
-current_tab = 2
+current_tab = 1
 tabs_visible = false
 
 [node name="STRING" type="VBoxContainer" parent="VBoxContainer/FieldSettings"]
@@ -172,11 +187,11 @@ layout_mode = 2
 metadata/_tab_index = 0
 
 [node name="OPTION" type="VBoxContainer" parent="VBoxContainer/FieldSettings"]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
-[node name="CheckButton" type="CheckButton" parent="VBoxContainer/FieldSettings/OPTION"]
+[node name="Options_Multiple" type="CheckButton" parent="VBoxContainer/FieldSettings/OPTION"]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Multiple"
 
@@ -201,6 +216,7 @@ size_flags_horizontal = 3
 text = "Add A New Option"
 
 [node name="NUMBER" type="VBoxContainer" parent="VBoxContainer/FieldSettings"]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 

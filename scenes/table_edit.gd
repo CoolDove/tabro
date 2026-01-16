@@ -273,18 +273,16 @@ func _open_cell_edit(row: int, column: int):
 	if cell_control != null:
 		if fieldinfo.type == Main.FieldType.OPTION:
 			var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor_option.tscn").instantiate()
+			editor.data = data
+			editor.fieldinfo = fieldinfo
+			editor.row = row
+			editor.column = column
 			add_child(editor)
 			editor.size = Vector2(fieldinfo.width+1, cell_height+1)
 			editor.global_position = cell_control.global_position + Vector2(-1, -1)
 			for o in fieldinfo.toption_options: editor.add_item(o)
-			editor.item_selected.connect(func(idx:int):
-				var option_idx = idx - 1
-				var value = ""
-				if option_idx > -1:
-					value = fieldinfo.toption_options[option_idx]
-				data.records[row][column] = value
+			editor.on_value_changed.connect(func(value):
 				_update_cell_value(cell_control, column, row, value)
-				editor.queue_free()
 			)
 		elif fieldinfo.type == Main.FieldType.NUMBER:
 			var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor.tscn").instantiate() as LineEdit
@@ -425,11 +423,30 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 			control.set("text", celldata)
 			control.add_theme_color_override("font_color", Color.RED)
 	elif fieldinfo.type == Main.FieldType.OPTION:
-		var src = celldata
-		var elms = src.split(",")
-		var output = " ".join(elms)
-		control.set("text", output)
-		control.add_theme_color_override("font_color", Color.BLUE)
+		var options = []
+		var valid = true
+		if typeof(celldata) != TYPE_STRING:
+			valid = false
+		if valid and celldata.begins_with(">"):
+			var raw_indexes = celldata.substr(1).split(",")
+			for index in raw_indexes:
+				if index.is_valid_int():
+					var idx = index.to_int()
+					if idx >= 0 and idx < fieldinfo.toption_options.size():
+						options.append(fieldinfo.toption_options[idx])
+					else:
+						valid = false
+						break
+				else:
+					valid = false
+					break
+		if valid:
+			control.set("text", " ".join(options))
+			control.add_theme_color_override("font_color", Color.DARK_CYAN)
+		else:
+			control.set("text", "???(%s)" % celldata)
+			control.add_theme_color_override("font_color", Color.RED)
+		control.add_theme_color_override("font_color", Color.RED)
 	elif fieldinfo.type == Main.FieldType.CODE:
 		var script = GDScript.new()
 		script.source_code = fieldinfo.tcode_code
