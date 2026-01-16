@@ -412,6 +412,8 @@ func refresh():
 
 func _update_cell_value(control: Control, column: int, row: int, celldata):
 	var fieldinfo = fields[column]
+	for c in control.get_children(): c.queue_free() # Clear the children, some complex types add children to show things.
+
 	if fieldinfo.type == Main.FieldType.STRING:
 		control.set("text", celldata)
 		control.add_theme_color_override("font_color", Color.DIM_GRAY)
@@ -441,8 +443,23 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 					valid = false
 					break
 		if valid:
-			control.set("text", " ".join(options))
-			control.add_theme_color_override("font_color", Color.DARK_CYAN)
+			var scroll_ctnr = ScrollContainer.new()
+			scroll_ctnr.set_anchors_preset(PRESET_FULL_RECT)
+			control.add_child(scroll_ctnr)
+			var ctnr = HBoxContainer.new()
+			ctnr.set_anchors_preset(PRESET_FULL_RECT)
+			ctnr.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+			scroll_ctnr.add_child(ctnr)
+			ctnr.custom_minimum_size.y = scroll_ctnr.size.y
+			scroll_ctnr.item_rect_changed.connect(func():
+				ctnr.custom_minimum_size.y = scroll_ctnr.size.y
+			)
+			for elem in options:
+				var lb = ResourceLoader.load("res://scenes/option_element.tscn").instantiate()
+				lb.text = elem
+				var h = (rand_from_seed(elem.hash())[0]%128)/128.0
+				lb.set_deferred("color", Color.from_hsv(h, 0.7, 0.6))
+				ctnr.add_child(lb)
 		else:
 			control.set("text", "???(%s)" % celldata)
 			control.add_theme_color_override("font_color", Color.RED)

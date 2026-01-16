@@ -1,0 +1,60 @@
+[gd_scene load_steps=4 format=3 uid="uid://b37o284ms13g"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_p5iac"]
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 6.0
+content_margin_bottom = 2.0
+
+[sub_resource type="GDScript" id="GDScript_p5iac"]
+resource_name = "OptionElement"
+script/source = "@tool
+extends Label
+
+@export var color : Color:
+	get:
+		if bg == null:
+			return Color.TRANSPARENT
+		else:
+			return bg.modulate
+	set(v):
+		if bg != null:
+			bg.modulate = v
+		else:
+			set_deferred(\"color\", color)
+
+@onready var bg = %Background
+"
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p5iac"]
+bg_color = Color(1, 1, 1, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[node name="OptionElement" type="Label"]
+custom_minimum_size = Vector2(2, 2)
+offset_right = 48.0
+offset_bottom = 23.0
+size_flags_horizontal = 4
+theme_override_styles/normal = SubResource("StyleBoxEmpty_p5iac")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_p5iac")
+text = "Hello"
+horizontal_alignment = 1
+vertical_alignment = 1
+script = SubResource("GDScript_p5iac")
+color = Color(0.8088311, 0.08492156, 0.28405693, 1)
+
+[node name="Background" type="Panel" parent="."]
+unique_name_in_owner = true
+modulate = Color(0.8088311, 0.08492156, 0.28405693, 1)
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_p5iac")
