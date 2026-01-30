@@ -6,6 +6,8 @@
 resource_name = "CellValueEditorFallback"
 script/source = "extends LineEdit
 
+signal on_exit_code(code:CellValueEditorStatic.ExitCode)
+
 func _ready() -> void:
 	text_changed.connect(func(t):
 		print(\"text changed: %s\" % t)
@@ -20,9 +22,20 @@ func _input(e: InputEvent) -> void:
 
 func _gui_input(e: InputEvent) -> void:
 	if e is InputEventKey:
-		if e.keycode == KEY_ENTER:
+		var just_pressed :bool= not e.echo and e.pressed
+		if e.keycode == KEY_ENTER and just_pressed:
 			queue_free()
-		elif e.keycode == KEY_ESCAPE:
+			if e.shift_pressed:
+				on_exit_code.emit(CellValueEditorStatic.ExitCode.SEnter)
+			else:
+				on_exit_code.emit(CellValueEditorStatic.ExitCode.Enter)
+		if e.keycode == KEY_TAB and just_pressed:
+			queue_free()
+			if e.shift_pressed:
+				on_exit_code.emit(CellValueEditorStatic.ExitCode.STab)
+			else:
+				on_exit_code.emit(CellValueEditorStatic.ExitCode.Tab)
+		elif e.keycode == KEY_ESCAPE and just_pressed:
 			queue_free()
 "
 

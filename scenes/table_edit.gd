@@ -31,13 +31,7 @@ var select_region : Rect2i # When size == Vector2i.ONE, means only one cell sele
 var hover_cell : Vector2i
 var is_hover_cell_valid :bool:
 	get:
-		return not (
-			hover_cell.x < 0 or
-			hover_cell.y < 0 or
-			hover_cell.x >= fields.size() or
-			hover_cell.y >= visible_end or
-			hover_cell.y >= data.records.size()
-		)
+		return is_cell_in_table_range(hover_cell.y, hover_cell.x)
 
 class Field:
 	var name : String
@@ -84,6 +78,15 @@ func save(filepath:String=""):
 	file.store_string(jsonstr)
 	file.close()
 	print("save to %s" % saveto)
+
+func is_cell_in_table_range(row:int, column:int):
+	return not (
+		column < 0 or
+		row < 0 or
+		column >= fields.size() or
+		row >= visible_end or
+		row >= data.records.size()
+	)
 
 func _ready():
 	# Add a little block to fit the scroll bar width in body scroll container.
@@ -206,7 +209,6 @@ func _gui_input(event):
 					if is_hover_cell_valid:
 						if event.is_pressed():
 							select_anchor = hover_cell
-							print("update select: ", hover_cell)
 							_update_select(Rect2i(hover_cell, Vector2i.ZERO))
 						else:
 							_open_cell_edit(hover_cell.y, hover_cell.x)
@@ -263,10 +265,12 @@ func _update_hover():
 	grid.queue_redraw()
 
 func _update_select(new_select_region: Rect2i):
+	print("select %s" % [new_select_region])
 	select_region = new_select_region
 	grid.queue_redraw()
 
 func _open_cell_edit(row: int, column: int):
+	print("open cell edit on : %s, %s" % [row, column])
 	var cell_control = _get_cellctrl_from_hover_cell(column, row)
 	# To instantiate the quick cell value editor.
 	var fieldinfo = fields[column]
@@ -284,16 +288,16 @@ func _open_cell_edit(row: int, column: int):
 			editor.on_value_changed.connect(func(value):
 				_update_cell_value(cell_control, column, row, value)
 			)
-		elif fieldinfo.type == Main.FieldType.NUMBER:
-			var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor.tscn").instantiate() as LineEdit
-			add_child(editor)
-			editor.set_deferred("size", Vector2(fieldinfo.width+1, cell_height+1))
-			editor.global_position = cell_control.global_position + Vector2(-1, -1)
-			editor.text = "%s" % data.records[row][column]
-			editor.text_changed.connect(func(text:String):
-				data.records[row][column] = text
-				call_deferred("refresh")
-			)
+		#elif fieldinfo.type == Main.FieldType.NUMBER:
+			#var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor.tscn").instantiate() as LineEdit
+			#add_child(editor)
+			#editor.set_deferred("size", Vector2(fieldinfo.width+1, cell_height+1))
+			#editor.global_position = cell_control.global_position + Vector2(-1, -1)
+			#editor.text = "%s" % data.records[row][column]
+			#editor.text_changed.connect(func(text:String):
+				#data.records[row][column] = text
+				#call_deferred("refresh")
+			#)
 		else:
 			var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor.tscn").instantiate() as LineEdit
 			add_child(editor)
@@ -303,6 +307,23 @@ func _open_cell_edit(row: int, column: int):
 			editor.text_changed.connect(func(text:String):
 				data.records[row][column] = text
 				call_deferred("refresh")
+			)
+			editor.on_exit_code.connect(func(code:CellValueEditorStatic.ExitCode):
+				var rn :int = row
+				var cn :int = column
+				match code:
+					CellValueEditorStatic.ExitCode.Enter:
+						rn = row+1
+					CellValueEditorStatic.ExitCode.SEnter:
+						rn = row-1
+					CellValueEditorStatic.ExitCode.Tab:
+						cn = column+1
+					CellValueEditorStatic.ExitCode.STab:
+						cn = column-1
+				print("new position: %s, %s" % [rn, cn] )
+				if (rn != row or cn != column) and is_cell_in_table_range(rn, cn):
+					call_deferred("_update_select", Rect2i(cn, rn, 0,0))
+					call_deferred("_open_cell_edit", rn, cn)
 			)
 
 func _get_cellctrl_from_hover_cell(column: int, row: int) -> Control:
