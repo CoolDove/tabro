@@ -20,6 +20,10 @@ boot_splash/fullsize=false
 boot_splash/use_filter=false
 config/icon="res://icon.svg"
 
+[dotnet]
+
+project/assembly_name="Tabro"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/csv-data-importer/plugin.cfg")
