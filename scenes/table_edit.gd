@@ -271,7 +271,7 @@ func _update_select(new_select_region: Rect2i):
 
 func _open_cell_edit(row: int, column: int):
 	print("open cell edit on : %s, %s" % [row, column])
-	var cell_control = _get_cellctrl_from_hover_cell(column, row)
+	var cell_control = _try_get_cellctrl(column, row)
 	# To instantiate the quick cell value editor.
 	var fieldinfo = fields[column]
 	if cell_control != null:
@@ -305,16 +305,6 @@ func _open_cell_edit(row: int, column: int):
 					call_deferred("_update_select", Rect2i(cn, rn, 0,0))
 					call_deferred("_open_cell_edit", rn, cn)
 			)
-		#elif fieldinfo.type == Main.FieldType.NUMBER:
-			#var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor.tscn").instantiate() as LineEdit
-			#add_child(editor)
-			#editor.set_deferred("size", Vector2(fieldinfo.width+1, cell_height+1))
-			#editor.global_position = cell_control.global_position + Vector2(-1, -1)
-			#editor.text = "%s" % data.records[row][column]
-			#editor.text_changed.connect(func(text:String):
-				#data.records[row][column] = text
-				#call_deferred("refresh")
-			#)
 		else:
 			var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor.tscn").instantiate() as LineEdit
 			add_child(editor)
@@ -343,15 +333,20 @@ func _open_cell_edit(row: int, column: int):
 					call_deferred("_open_cell_edit", rn, cn)
 			)
 
-func _get_cellctrl_from_hover_cell(column: int, row: int) -> Control:
+func _try_get_cellctrl(column: int, row: int, cached_linectnr: Control=null) -> Control:
 	if data == null:
 		return null
 	if column < 0 or row < 0 or row > data.records.size() - 1 or column > fields.size() - 1:
 		return null
-	var linectnr = grid.get_child(row - visible_begin)
+	var linectnr = _try_get_line_ctnr(row)
 	if linectnr == null:
 		return null
 	return linectnr.get_child(column) as Control
+
+func _try_get_line_ctnr(row: int) -> Control:
+	if row >= visible_begin and row < visible_end and row < data.records.size():
+		return grid.get_child(row - visible_begin)
+	return null
 
 func refresh():
 	if data == null:
@@ -369,14 +364,6 @@ func refresh():
 	for i in range(0, fields_count - titleline.get_child_count()):
 		var field_label = FieldLabelScn.instantiate()
 		titleline.add_child(field_label)
-		# field_label.on_right_release.connect(func():
-		# 	var field_index = field_label.get_meta("field_index")
-		# 	var field = fields[field_index]
-		# 	field.type += 1
-		# 	if field.type == Main.FieldType.UNKNOWN:
-		# 		field.type = 0
-		# 	field_label.field_type = field.type
-		# )
 		field_label.on_left_release.connect(func():
 			var field_index = field_label.get_meta("field_index")
 			var field = fields[field_index]
@@ -392,7 +379,19 @@ func refresh():
 			inspector.on_field_type_changed.connect(func(type:Main.FieldType):
 				field.type = type
 				field_label.field_type = field.type
+				for r in range(visible_begin, visible_end):
+					var linectnr = _try_get_line_ctnr(r)
+					if linectnr != null:
+						var cellctrl = linectnr.get_child(field_index)
+						if cellctrl != null:
+							_update_cell_value(cellctrl, field_index, r, data.records[r][field_index])
 				refresh()
+			)
+			inspector.on_field_option_changed.connect(func():
+				for r in range(visible_begin, visible_end):
+					var cellctrl = _try_get_cellctrl(field_index, r)
+					if cellctrl != null:
+						_update_cell_value(cellctrl, field_index, r, data.records[r][field_index])
 			)
 		)
 
@@ -438,19 +437,18 @@ func refresh():
 	for r in range(visible_begin, visible_record_count + visible_begin):
 		var rowdata = data.records[r]
 		var linectnr = grid.get_child(r - visible_begin)
-		# print("rowdata: %s" % rowdata)
 		for col in range(0, fields_count):
 			var cellctrl = linectnr.get_child(col)
 			# Set cell edit
 			_initialize_cellctrl(cellctrl)
 			cellctrl.custom_minimum_size = Vector2(fields[col].width, cell_height)
 			_update_cell_value(cellctrl, col, r, rowdata[col])
-			# cellctrl.text = rowdata[col]
 	grid.queue_redraw()
 
 func _update_cell_value(control: Control, column: int, row: int, celldata):
+	print("update cell value of: [row: %s, column: %s]" % [column, row])
 	var fieldinfo = fields[column]
-	for c in control.get_children(): c.queue_free() # Clear the children, some complex types add children to show things.
+	for c in control.get_children(): c.queue_free() # Clear the children, some complex types add children to show things, like multi-option type.
 
 	if fieldinfo.type == Main.FieldType.STRING:
 		control.set("text", celldata)
