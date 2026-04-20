@@ -288,6 +288,23 @@ func _open_cell_edit(row: int, column: int):
 			editor.on_value_changed.connect(func(value):
 				_update_cell_value(cell_control, column, row, value)
 			)
+			editor.on_exit_code.connect(func(code:CellValueEditorStatic.ExitCode):
+				var rn :int = row
+				var cn :int = column
+				match code:
+					CellValueEditorStatic.ExitCode.Enter:
+						rn = row+1
+					CellValueEditorStatic.ExitCode.SEnter:
+						rn = row-1
+					CellValueEditorStatic.ExitCode.Tab:
+						cn = column+1
+					CellValueEditorStatic.ExitCode.STab:
+						cn = column-1
+				print("new position: %s, %s" % [rn, cn] )
+				if (rn != row or cn != column) and is_cell_in_table_range(rn, cn):
+					call_deferred("_update_select", Rect2i(cn, rn, 0,0))
+					call_deferred("_open_cell_edit", rn, cn)
+			)
 		#elif fieldinfo.type == Main.FieldType.NUMBER:
 			#var editor = ResourceLoader.load("res://scenes/cell_value_editor/cell_value_editor.tscn").instantiate() as LineEdit
 			#add_child(editor)

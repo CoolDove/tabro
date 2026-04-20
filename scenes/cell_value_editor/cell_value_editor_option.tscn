@@ -10,6 +10,7 @@ var data : TabroData
 var fieldinfo : FieldData
 
 signal on_value_changed(value)
+signal on_exit_code(code:CellValueEditorStatic.ExitCode)
 
 func _ready() -> void:
 	add_item(\"\", 0) # Default item
@@ -35,12 +36,32 @@ func _ready() -> void:
 			value = \">%s\" % \",\".join(options) if options.size() > 0 else \"\"
 			data.records[row][column] = value
 			on_value_changed.emit(value)
+		# Mouse click: auto-close without navigation
 		queue_free()
 	)
 
 func _input(e: InputEvent) -> void:
 	if e is InputEventMouseButton:
 		if not Rect2(Vector2.ZERO, size).has_point(get_local_mouse_position()):
+			queue_free()
+
+func _gui_input(e: InputEvent) -> void:
+	print(\"option get event: %s\" % [e])
+	if e is InputEventKey:
+		var just_pressed :bool= not e.echo and e.pressed
+		if e.keycode == KEY_ENTER and just_pressed:
+			queue_free()
+			if e.shift_pressed:
+				on_exit_code.emit(CellValueEditorStatic.ExitCode.SEnter)
+			else:
+				on_exit_code.emit(CellValueEditorStatic.ExitCode.Enter)
+		elif e.keycode == KEY_TAB and just_pressed:
+			queue_free()
+			if e.shift_pressed:
+				on_exit_code.emit(CellValueEditorStatic.ExitCode.STab)
+			else:
+				on_exit_code.emit(CellValueEditorStatic.ExitCode.Tab)
+		elif e.keycode == KEY_ESCAPE and just_pressed:
 			queue_free()
 "
 
