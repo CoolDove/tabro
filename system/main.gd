@@ -104,7 +104,9 @@ static func process_value(value: String):
 	empty_table.add_record()
 	empty_table.add_record()
 	_open_data(empty_table)
-
+	var test_csv_line = CsvReader.parse_csv_line("skill_insult,12,14,\"Hello, World\",\"this is \"\"QUOTED\"\"\"")
+	for cell in test_csv_line:
+		print("element: ", cell)
 
 static func request_inspector() -> Control:
 	if instance == null:

@@ -1,6 +1,12 @@
-class_name CsvReader
+extends Node
 
-static func load(filepath) -> CsvData:
+var _regex: RegEx
+
+func _init():
+	_regex = RegEx.new()
+	_regex.compile('(?:^|,)(?:"((?:[^"]|"")*)"|([^",]*))')
+
+func load(filepath: String) -> CsvData:
 	var delim: String = ","
 
 	var file = FileAccess.open(filepath, FileAccess.READ)
@@ -26,3 +32,29 @@ static func load(filepath) -> CsvData:
 	data.column = max_column
 
 	return data
+
+func parse_csv_lines(text: String) -> Array[PackedStringArray]:
+	var lines :PackedStringArray= text.split("\n")
+	var results : Array[PackedStringArray]
+	results.resize(lines.size())
+	var index :int= 0
+	for line in lines:
+		results[index] = parse_csv_line(line)
+		index += 1
+	return results
+
+func parse_csv_line(line: String) -> PackedStringArray:
+	var matches = _regex.search_all(line)
+	if matches.size() == 0:
+		return []
+	var results : PackedStringArray
+	for m in matches:
+		var quoted = m.get_string(1)
+		var unquoted = m.get_string(2)
+		var value: String
+		if quoted != "":
+			value = quoted.replace('""', '"')
+		else:
+			value = unquoted
+		results.append(value)
+	return results
