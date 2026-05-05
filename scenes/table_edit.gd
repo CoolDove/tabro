@@ -487,9 +487,9 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 				lb.set_deferred("color", Color.from_hsv(h, 0.7, 0.6))
 				ctnr.add_child(lb)
 			control.set("text", "")
-		else:
-			control.set("text", "???(%s)" % celldata)
-			control.add_theme_color_override("font_color", Color(1,0,0,0.2))
+		#else:
+			#control.set("text", "???(%s)" % celldata)
+			#control.add_theme_color_override("font_color", Color(1,0,0,0.2))
 	elif fieldinfo.type == Main.FieldType.CODE:
 		var script = GDScript.new()
 		script.source_code = fieldinfo.tcode_code

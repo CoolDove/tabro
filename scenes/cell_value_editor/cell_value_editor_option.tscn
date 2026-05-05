@@ -13,7 +13,6 @@ signal on_value_changed(value)
 signal on_exit_code(code:CellValueEditorStatic.ExitCode)
 
 func _ready() -> void:
-	#add_item(\"\", 0) # Default item
 	focus_exited.connect(func():
 		queue_free()
 	)
@@ -52,7 +51,9 @@ func _input(e: InputEvent) -> void:
 
 func _gui_input(e: InputEvent) -> void:
 	print(\"option get event: %s\" % [e])
-	if e is InputEventKey:
+	if e is InputEventMouseButton:
+		queue_free()
+	elif e is InputEventKey:
 		var just_pressed :bool= not e.echo and e.pressed
 		if e.keycode == KEY_ENTER and just_pressed:
 			queue_free()
@@ -77,5 +78,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 flat = true
+text_overrun_behavior = 1
 allow_reselect = true
 script = SubResource("GDScript_8xc3v")
