@@ -2,7 +2,7 @@ extends Resource
 class_name TabroData
 
 @export var fields : Array[FieldData]
-@export var records : Array[PackedStringArray]
+@export var records : Array # 默认类型是String，Option类型是Array[int]
 
 var is_normalized :bool:
 	get:
@@ -27,7 +27,7 @@ func add_field(name: String, type:= Main.FieldType.STRING) -> FieldData:
 	return field
 
 func add_record() -> PackedStringArray:
-	var row : PackedStringArray
+	var row : Array
 	row.resize(fields.size())
 	records.append(row)
 	return row

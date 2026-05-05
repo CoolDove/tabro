@@ -310,7 +310,8 @@ func _open_cell_edit(row: int, column: int):
 			add_child(editor)
 			editor.set_deferred("size", Vector2(fieldinfo.width+1, cell_height+1))
 			editor.global_position = cell_control.global_position + Vector2(-1, -1)
-			editor.text = "%s" % data.records[row][column]
+			var celldata = data.records[row][column]
+			editor.text = "%s" % celldata if celldata != null else ""
 			editor.text_changed.connect(func(text:String):
 				data.records[row][column] = text
 				call_deferred("refresh")
@@ -451,34 +452,22 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 	for c in control.get_children(): c.queue_free() # Clear the children, some complex types add children to show things, like multi-option type.
 
 	if fieldinfo.type == Main.FieldType.STRING:
-		control.set("text", celldata)
+		control.set("text", celldata if celldata is String else "")
 		control.add_theme_color_override("font_color", Color.DIM_GRAY)
 	elif fieldinfo.type == Main.FieldType.NUMBER:
-		if celldata == null || celldata == "" || celldata.is_valid_int():
-			control.set("text", celldata.to_int())
+		var data :String= celldata if celldata is String else ""
+		if data == null || data == "" || data.is_valid_int():
+			control.set("text", data.to_int())
 			control.add_theme_color_override("font_color", Color.DARK_GREEN)
 		else:
-			control.set("text", celldata)
+			control.set("text", data)
 			control.add_theme_color_override("font_color", Color.RED)
 	elif fieldinfo.type == Main.FieldType.OPTION:
-		var options = []
 		var valid = true
-		if typeof(celldata) != TYPE_STRING:
+		if celldata is not Array[int]:
 			valid = false
-		if valid and celldata.begins_with(">"):
-			var raw_indexes = celldata.substr(1).split(",")
-			for index in raw_indexes:
-				if index.is_valid_int():
-					var idx = index.to_int()
-					if idx >= 0 and idx < fieldinfo.toption_options.size():
-						options.append(fieldinfo.toption_options[idx])
-					else:
-						valid = false
-						break
-				else:
-					valid = false
-					break
 		if valid:
+			var options :Array[int]= celldata
 			var scroll_ctnr = ScrollContainer.new()
 			scroll_ctnr.set_anchors_preset(PRESET_FULL_RECT)
 			control.add_child(scroll_ctnr)
@@ -492,14 +481,15 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 			)
 			for elem in options:
 				var lb = ResourceLoader.load("res://scenes/option_element.tscn").instantiate()
-				lb.text = elem
-				var h = (rand_from_seed(elem.hash())[0]%128)/128.0
+				var text :String= fieldinfo.toption_options[elem]
+				lb.text = text
+				var h = (rand_from_seed(lb.text.hash())[0]%128)/128.0
 				lb.set_deferred("color", Color.from_hsv(h, 0.7, 0.6))
 				ctnr.add_child(lb)
+			control.set("text", "")
 		else:
 			control.set("text", "???(%s)" % celldata)
-			control.add_theme_color_override("font_color", Color.RED)
-		control.add_theme_color_override("font_color", Color.RED)
+			control.add_theme_color_override("font_color", Color(1,0,0,0.2))
 	elif fieldinfo.type == Main.FieldType.CODE:
 		var script = GDScript.new()
 		script.source_code = fieldinfo.tcode_code
@@ -511,7 +501,7 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 				func(v): return v["name"] == "process_value"
 			)
 			if process_func > -1:
-				var result = script.call("process_value", celldata)
+				var result = script.call("process_value", "" if celldata == null || typeof(celldata) != TYPE_STRING else celldata)
 				control.set("text", result)
 				control.add_theme_color_override("font_color", Color.DARK_CYAN)
 				ok = true

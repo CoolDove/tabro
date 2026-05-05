@@ -13,17 +13,21 @@ signal on_value_changed(value)
 signal on_exit_code(code:CellValueEditorStatic.ExitCode)
 
 func _ready() -> void:
-	add_item(\"\", 0) # Default item
+	#add_item(\"\", 0) # Default item
 	focus_exited.connect(func():
 		queue_free()
 	)
-	#selected = -1;
-	call_deferred(\"show_popup\")
 	item_selected.connect(func(idx:int):
-		var option_idx = idx - 1
-		var value = \"\"
-		var options = FieldData.parse_standardized_options(data.records[row][column])
-		if option_idx > -1:
+		var option_idx = idx
+		if option_idx < 0:
+			return
+		var celldata = data.records[row][column]
+		if celldata == null || celldata is not Array[int]:
+			var options :Array[int]= [option_idx]
+			data.records[row][column] = options
+			on_value_changed.emit(options)
+		else:
+			var options :Array[int]= celldata
 			var find = options.find(option_idx)
 			if fieldinfo.toption_multiple:
 				if find > -1:
@@ -32,13 +36,14 @@ func _ready() -> void:
 					options.append(option_idx)
 			else:
 				options = [option_idx]
-			# value = fieldinfo.toption_options[option_idx]
-			value = \">%s\" % \",\".join(options) if options.size() > 0 else \"\"
-			data.records[row][column] = value
-			on_value_changed.emit(value)
+			data.records[row][column] = options
+			on_value_changed.emit(options)
 		# Mouse click: auto-close without navigation
 		queue_free()
 	)
+	await get_tree().process_frame
+	call_deferred(\"show_popup\")
+	select(-1)
 
 func _input(e: InputEvent) -> void:
 	if e is InputEventMouseButton:
@@ -71,5 +76,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+flat = true
 allow_reselect = true
 script = SubResource("GDScript_8xc3v")
