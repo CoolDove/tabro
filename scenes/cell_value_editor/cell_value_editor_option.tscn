@@ -42,7 +42,7 @@ func _ready() -> void:
 		queue_free()
 	)
 	await get_tree().process_frame
-	call_deferred(\"show_popup\")
+	show_popup()
 	select(-1)
 
 func _input(e: InputEvent) -> void:
