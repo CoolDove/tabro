@@ -361,7 +361,7 @@ func _convert_field_type(column: int, from_type: Main.FieldType, to_type: Main.F
 			else:
 				plain_text = ""
 		else:
-			plain_text = cell if cell != null else ""
+			plain_text = ("%s" % cell) if cell != null else ""
 		print("convert to plain text: %s" % plain_text)
 		if to_type == Main.FieldType.OPTION:
 			if plain_text != null && plain_text != "":
@@ -481,21 +481,26 @@ func refresh():
 	grid.queue_redraw()
 
 func _update_cell_value(control: Control, column: int, row: int, celldata):
-	print("update cell value of: [row: %s, column: %s]" % [column, row])
+	# print("update cell value of: [row: %s, column: %s]" % [column, row])
 	var fieldinfo = fields[column]
 	for c in control.get_children(): c.queue_free() # Clear the children, some complex types add children to show things, like multi-option type.
 
 	if fieldinfo.type == Main.FieldType.STRING:
 		control.set("text", celldata if celldata is String else "")
-		control.add_theme_color_override("font_color", Color.DIM_GRAY)
+		control.add_theme_color_override("font_color", Color.BLACK)
 	elif fieldinfo.type == Main.FieldType.NUMBER:
 		var data :String= celldata if celldata is String else ""
-		if data == null || data == "" || data.is_valid_int():
-			control.set("text", data.to_int())
-			control.add_theme_color_override("font_color", Color.DARK_GREEN)
+		if data == "":
+			control.set("text", "")
 		else:
-			control.set("text", data)
-			control.add_theme_color_override("font_color", Color.RED)
+			var is_int :bool= fieldinfo.tnumber_type == FieldData.NumberType.Integer
+			var is_float :bool= fieldinfo.tnumber_type == FieldData.NumberType.Float
+			var type_match :bool= \
+				(is_int && data.is_valid_int()) || \
+				(is_float && data.is_valid_float())
+			if type_match:
+				control.set("text", data.to_int() if is_int else (data.to_float() if is_float else "Unknown Number Type"))
+				control.add_theme_color_override("font_color", Color.DARK_GREEN)
 	elif fieldinfo.type == Main.FieldType.OPTION:
 		var valid = true
 		if celldata is not Array[int]:

@@ -26,7 +26,7 @@ func add_field(name: String, type:= Main.FieldType.STRING) -> FieldData:
 		normalize()
 	return field
 
-func add_record() -> PackedStringArray:
+func add_record() -> Array:
 	var row : Array
 	row.resize(fields.size())
 	records.append(row)
@@ -124,7 +124,7 @@ static func _deserialize_body_v01(jobj) -> TabroData:
 
 static func _deserialize_body_v02(jobj) -> TabroData:
 	var dfields : Array[FieldData]
-	var drecords : Array[PackedStringArray]
+	var drecords : Array
 	var jfields = jobj["fields"]
 	for field in jfields:
 		var f = FieldData.new()
@@ -132,7 +132,7 @@ static func _deserialize_body_v02(jobj) -> TabroData:
 			f.set(jf, field[jf])
 		dfields.append(f)
 	for record in jobj["records"]:
-		var rowdata : PackedStringArray
+		var rowdata : Array
 		for row in record:
 			rowdata.append(row)
 		drecords.append(rowdata)

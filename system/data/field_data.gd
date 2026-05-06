@@ -16,6 +16,13 @@ class_name FieldData
 
 @export var tcode_code : String
 
+@export var tnumber_type : NumberType
+
+enum NumberType {
+	Integer = 0,
+	Float = 1,
+}
+
 
 static func parse_standardized_options(data: String) -> Array:
 	var options = []

@@ -103,10 +103,7 @@ static func process_value(value: String):
 	empty_table.add_record()
 	empty_table.add_record()
 	empty_table.add_record()
-	_open_data(empty_table)
-	var test_csv_line = CsvReader.parse_csv_line("skill_insult,12,14,\"Hello, World\",\"this is \"\"QUOTED\"\"\"")
-	for cell in test_csv_line:
-		print("element: ", cell)
+	add_to_main_panel(TableEdit.load_from_data(empty_table))
 
 static func request_inspector() -> Control:
 	if instance == null:
@@ -148,7 +145,13 @@ func open_file(filepath: String) -> bool:
 	if not FileAccess.file_exists(filepath):
 		return false
 	clear_main_panel()
-	if filepath.ends_with(".csv") or filepath.ends_with(".xsv"):
+	if filepath.ends_with(".tbr"):
+		var table_edit = TableEdit.load_from_file(filepath)
+		if table_edit == null:
+			return false
+		add_to_main_panel(table_edit)
+		return true
+	else:
 		var csvdata = CsvReader.load(filepath)
 		var tbrdata = TabroData.new()
 		if csvdata.records.size() > 0:
@@ -160,12 +163,7 @@ func open_file(filepath: String) -> bool:
 			var ary = tbrdata.add_record()
 			for c in range(0, min(csvdata.column, row.size()-1)):
 				ary[c] = row[c]
-		return _open_data(tbrdata)
-	else:
-		var table_edit = TableEdit.load_from_file(filepath)
-		if table_edit == null:
-			return false
-		add_to_main_panel(table_edit)
+		add_to_main_panel(TableEdit.load_from_data(tbrdata))
 		return true
 
 func _open_data(data: TabroData) -> bool:

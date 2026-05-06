@@ -57,6 +57,11 @@ func _ready():
 		on_field_option_changed.emit()
 	)
 
+	%NumberType.item_selected.connect(func(idx):
+		fieldinfo.tnumber_type = idx
+		on_field_option_changed.emit()
+	)
+
 func _on_tab_open(tab_index: int):
 	print(\"tab open: %s\" % tab_index)
 	var tabname = tabc_field_settings.get_child(tab_index).name
@@ -65,6 +70,8 @@ func _on_tab_open(tab_index: int):
 			_init_panel_option()
 		\"CODE\":
 			_init_panel_code()
+		\"NUMBER\":
+			_init_panel_number()
 		_:
 			print(\"Fallback tab open\")
 
@@ -89,6 +96,9 @@ func _init_panel_option():
 
 func _init_panel_code():
 	%CodeEditor.text = fieldinfo.tcode_code
+
+func _init_panel_number():
+	%NumberType.select(fieldinfo.tnumber_type as int)
 
 func _option_type_append_option_editor(option_index: int):
 	var box = HBoxContainer.new()
@@ -231,6 +241,7 @@ text = "Number Type"
 clip_text = true
 
 [node name="NumberType" type="OptionButton" parent="VBoxContainer/FieldSettings/NUMBER/LbdNumberType"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 selected = 0
