@@ -286,6 +286,7 @@ func _open_cell_edit(row: int, column: int):
 			editor.global_position = cell_control.global_position + Vector2(-1, -1)
 			for o in fieldinfo.toption_options: editor.add_item(o)
 			editor.on_value_changed.connect(func(value):
+				data.records[row][column] = value
 				_update_cell_value(cell_control, column, row, value)
 			)
 			editor.on_exit_code.connect(func(code:CellValueEditorStatic.ExitCode):
@@ -314,7 +315,7 @@ func _open_cell_edit(row: int, column: int):
 			editor.text = "%s" % celldata if celldata != null else ""
 			editor.text_changed.connect(func(text:String):
 				data.records[row][column] = text
-				call_deferred("refresh")
+				_update_cell_value(cell_control, column, row, text)
 			)
 			editor.on_exit_code.connect(func(code:CellValueEditorStatic.ExitCode):
 				var rn :int = row
@@ -349,6 +350,44 @@ func _try_get_line_ctnr(row: int) -> Control:
 		return grid.get_child(row - visible_begin)
 	return null
 
+func _convert_field_type(column: int, from_type: Main.FieldType, to_type: Main.FieldType):
+	var fieldinfo = data.fields[column]
+	for record in data.records:
+		var cell = record[column]
+		var plain_text :String
+		if from_type == Main.FieldType.OPTION:
+			if cell is Array[int]:
+				plain_text = ",".join(cell.map(func (fromv)->String: return fieldinfo.toption_options[fromv]) as PackedStringArray)
+			else:
+				plain_text = ""
+		else:
+			plain_text = cell if cell != null else ""
+		print("convert to plain text: %s" % plain_text)
+		if to_type == Main.FieldType.OPTION:
+			if plain_text != null && plain_text != "":
+				var elems = CsvReader.parse_csv_line(plain_text)
+				var elemids :Array[int]
+				fieldinfo.toption_multiple = true
+				for e in elems:
+					if e == "":
+						continue
+					var find :int= fieldinfo.toption_options.find(e)
+					if find > -1:
+						elemids.append(find)
+					else:
+						elemids.append(fieldinfo.toption_options.size())
+						fieldinfo.toption_options.append(e)
+				record[column] = elemids
+		elif to_type == Main.FieldType.STRING:
+			record[column] = plain_text
+
+	for r in range(visible_begin, visible_end):
+		var linectnr = _try_get_line_ctnr(r)
+		if linectnr != null:
+			var cellctrl = linectnr.get_child(column)
+			if cellctrl != null:
+				_update_cell_value(cellctrl, column, r, data.records[r][column])
+
 func refresh():
 	if data == null:
 		return
@@ -379,14 +418,9 @@ func refresh():
 			inspector.set_anchors_preset(PRESET_FULL_RECT)
 			inspector.on_field_type_changed.connect(func(type:Main.FieldType):
 				field.type = type
+				var old_type :Main.FieldType= field_label.field_type
 				field_label.field_type = field.type
-				for r in range(visible_begin, visible_end):
-					var linectnr = _try_get_line_ctnr(r)
-					if linectnr != null:
-						var cellctrl = linectnr.get_child(field_index)
-						if cellctrl != null:
-							_update_cell_value(cellctrl, field_index, r, data.records[r][field_index])
-				refresh()
+				_convert_field_type(field_index, old_type, field.type)
 			)
 			inspector.on_field_option_changed.connect(func():
 				for r in range(visible_begin, visible_end):

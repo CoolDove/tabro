@@ -23,7 +23,6 @@ func _ready() -> void:
 		var celldata = data.records[row][column]
 		if celldata == null || celldata is not Array[int]:
 			var options :Array[int]= [option_idx]
-			data.records[row][column] = options
 			on_value_changed.emit(options)
 		else:
 			var options :Array[int]= celldata
@@ -35,7 +34,6 @@ func _ready() -> void:
 					options.append(option_idx)
 			else:
 				options = [option_idx]
-			data.records[row][column] = options
 			on_value_changed.emit(options)
 		# Mouse click: auto-close without navigation
 		queue_free()
