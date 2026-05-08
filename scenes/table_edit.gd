@@ -362,7 +362,7 @@ func _convert_field_type(column: int, from_type: Main.FieldType, to_type: Main.F
 				plain_text = ""
 		else:
 			plain_text = ("%s" % cell) if cell != null else ""
-		print("convert to plain text: %s" % plain_text)
+		# print("convert to plain text: %s" % plain_text)
 		if to_type == Main.FieldType.OPTION:
 			if plain_text != null && plain_text != "":
 				var elems = CsvReader.parse_csv_line(plain_text)
