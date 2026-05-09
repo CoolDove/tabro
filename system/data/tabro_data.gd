@@ -133,8 +133,18 @@ static func _deserialize_body_v02(jobj) -> TabroData:
 		dfields.append(f)
 	for record in jobj["records"]:
 		var rowdata : Array
+		var field_idx :int= 0
 		for row in record:
-			rowdata.append(row)
+			var field := dfields[field_idx]
+			if field.type == Main.FieldType.OPTION && row is Array:
+				print("read option cell", row)
+				var options :Array[int]
+				for o in row:
+					if o is float: options.append(int(o))
+				rowdata.append(options)
+			else:
+				rowdata.append(row)
+			field_idx += 1
 		drecords.append(rowdata)
 	var data = TabroData.new()
 	data.fields = dfields
