@@ -179,11 +179,6 @@ func _ready():
 	btn_manually_refresh.text = "Manually Refresh"
 	btn_manually_refresh.pressed.connect(func():
 		queue_refresh()
-		#for row in data.records.size():
-			#for column in data.fields.size():
-				#var backup = _find_cell_backup(row, column)
-				#print("%s, " % backup)
-			#print("---")
 	)
 	bottom_buttons.add_child(btn_manually_refresh)
 
@@ -229,7 +224,7 @@ func _ready():
 			grid.draw_rect(draw_hover_cell, Color(0x00c2c1ff), false, 3)
 	)
 	if data != null:
-		call_deferred("refresh")
+		queue_refresh()
 
 func _enter_tree():
 	_pool_label = Node.new()
@@ -259,11 +254,11 @@ func _gui_input(event):
 				MOUSE_BUTTON_WHEEL_UP:
 					var th = Main.instance.theme
 					th.default_font_size = min(th.default_font_size + 1, 64)
-					refresh()
+					queue_refresh()
 				MOUSE_BUTTON_WHEEL_DOWN:
 					var th = Main.instance.theme
 					th.default_font_size = max(th.default_font_size - 1, 12)
-					refresh()
+					queue_refresh()
 		else:
 			match event.button_index:
 				MOUSE_BUTTON_LEFT:
