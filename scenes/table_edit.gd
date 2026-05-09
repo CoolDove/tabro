@@ -149,9 +149,9 @@ func _ready():
 			gridscroller.scroll_horizontal = v
 	)
 	gridscroller.get_v_scroll_bar().value_changed.connect(func(_v):
-		refresh()
+		queue_refresh()
 	)
-	item_rect_changed.connect(refresh)
+	item_rect_changed.connect(queue_refresh)
 
 	# For virtual spacing the table grid
 	_virtual_spacing_before = Control.new()
@@ -170,6 +170,7 @@ func _ready():
 	btn_new_record.text = "Add New Record"
 	btn_new_record.pressed.connect(func():
 		data.add_record()
+		queue_refresh()
 		# refresh()
 	)
 	bottom_buttons.add_child(btn_new_record)
@@ -177,12 +178,12 @@ func _ready():
 	var btn_manually_refresh = Button.new()
 	btn_manually_refresh.text = "Manually Refresh"
 	btn_manually_refresh.pressed.connect(func():
-		refresh()
-		for row in data.records.size():
-			for column in data.fields.size():
-				var backup = _find_cell_backup(row, column)
-				print("%s, " % backup)
-			print("---")
+		queue_refresh()
+		#for row in data.records.size():
+			#for column in data.fields.size():
+				#var backup = _find_cell_backup(row, column)
+				#print("%s, " % backup)
+			#print("---")
 	)
 	bottom_buttons.add_child(btn_manually_refresh)
 
@@ -291,6 +292,10 @@ func _process(delta):
 		print("cell backup hit in frame: %s" % _debug_cell_backup_hit)
 		_debug_cell_backup_hit = 0
 
+	if _refresh_queued:
+		refresh()
+		_refresh_queued = false
+
 	# Watch memory
 	if _watch_mem_interval >= 0:
 		_watch_mem_interval -= delta
@@ -360,7 +365,7 @@ func _open_cell_edit(row: int, column: int):
 			editor.on_value_changed.connect(func(value):
 				data.records[row][column] = value
 				_remove_cell_backup(row, column)
-				#_update_cell_value(cell_control, column, row, value)
+				queue_refresh()
 			)
 			editor.on_exit_code.connect(func(code:CellValueEditorStatic.ExitCode):
 				var rn :int = row
@@ -389,7 +394,7 @@ func _open_cell_edit(row: int, column: int):
 			editor.text_changed.connect(func(text:String):
 				data.records[row][column] = text
 				_remove_cell_backup(row, column)
-				#_update_cell_value(cell_control, column, row, text)
+				queue_refresh()
 			)
 			editor.on_exit_code.connect(func(code:CellValueEditorStatic.ExitCode):
 				var rn :int = row
@@ -456,13 +461,17 @@ func _convert_field_type(column: int, from_type: Main.FieldType, to_type: Main.F
 			record[column] = plain_text
 
 	_remove_cell_backup_by_column(column)
-	call_deferred("refresh")
+	queue_refresh()
 	#for r in range(visible_begin, visible_end):
 		#var linectnr = _try_get_line_ctnr(r)
 		#if linectnr != null:
 			#var cellctrl = linectnr.get_child(column)
 			#if cellctrl != null:
 				#_update_cell_value(cellctrl, column, r, data.records[r][column])
+
+var _refresh_queued :bool= true
+func queue_refresh():
+	_refresh_queued = true
 
 func refresh():
 	if data == null:
@@ -575,6 +584,7 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 				backup.reparent(control, false)
 			else:
 				control.add_child(backup)
+			control.text = ""
 			_debug_cell_backup_hit += 1
 			return
 		else:
