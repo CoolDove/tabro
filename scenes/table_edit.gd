@@ -49,6 +49,51 @@ var visible_end : int: # exclude
 
 var _filepath : String
 
+# size should be "width x height", when you want to find [row, column], go row + column * height
+# null  -> 脏，需要重新更新
+# Node  -> 已经缓存的子节点，且和当前值对应，可以直接在_update_cell_value中设置
+# 字符串 -> 已经缓存的用于直接显示的字符串，可以直接在_update_cell_value中设置
+var _cell_backup : Array
+func _refresh_cell_backup(size: int):
+	_cell_backup.resize(size)
+	for i in size:
+		if _cell_backup[i] is Node: _cell_backup[i].queue_free()
+		_cell_backup[i] = null
+	print("refresh cell backup to size:	%s" % size)
+
+func _find_cell_backup(row: int, column: int):
+	var index :int= row + column * data.records.size()
+	if _cell_backup.size() > index:
+		return _cell_backup[index]
+	else:
+		return null
+
+func _upload_cell_backup(row: int, column: int, value) -> bool:
+	assert(value != null, "Dont do this! Use `_remove_cell_backup` instead.")
+	var index :int= row + column * data.records.size()
+	if _cell_backup.size() > index:
+		_cell_backup[index] = value
+		return true
+	return false
+
+func _remove_cell_backup(row: int, column: int):
+	var index :int= row + column * data.records.size()
+	if _cell_backup.size() > index:
+		var value = _cell_backup[index] 
+		if value is Node: value.queue_free()
+		_cell_backup[index] = null
+
+func _remove_cell_backup_by_column(column: int) -> bool:
+	var current_table_size = data.fields.size() * data.records.size()
+	if _cell_backup.size() != current_table_size:
+		print("size doesn't match")
+		return false
+	var start :int= column * data.records.size()
+	for i in range(start, start + data.records.size()):
+		var value = _cell_backup[i]
+		if value is Node: value.queue_free()
+		_cell_backup[i] = null
+	return true
 
 static func load_from_data(tbrdata: TabroData) -> TableEdit:
 	var _TableEdit = preload("./table_edit.tscn")
@@ -116,14 +161,30 @@ func _ready():
 	_virtual_spacing_after = Control.new()
 	_virtual_spacing_after.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_virtual_spacing_after.size_flags_vertical = Control.SIZE_SHRINK_END
+
+	var bottom_buttons = HBoxContainer.new()
+	bottom_buttons.set_anchors_preset(PRESET_TOP_LEFT)
+	_virtual_spacing_after.add_child(bottom_buttons)
+	
 	var btn_new_record = Button.new()
 	btn_new_record.text = "Add New Record"
 	btn_new_record.pressed.connect(func():
 		data.add_record()
-		refresh()
+		# refresh()
 	)
-	btn_new_record.set_anchors_preset(PRESET_TOP_LEFT)
-	_virtual_spacing_after.add_child(btn_new_record)
+	bottom_buttons.add_child(btn_new_record)
+
+	var btn_manually_refresh = Button.new()
+	btn_manually_refresh.text = "Manually Refresh"
+	btn_manually_refresh.pressed.connect(func():
+		refresh()
+		for row in data.records.size():
+			for column in data.fields.size():
+				var backup = _find_cell_backup(row, column)
+				print("%s, " % backup)
+			print("---")
+	)
+	bottom_buttons.add_child(btn_manually_refresh)
 
 	grid.add_child(_virtual_spacing_before, false, INTERNAL_MODE_FRONT)
 	grid.add_child(_virtual_spacing_after, false, INTERNAL_MODE_BACK)
@@ -219,6 +280,17 @@ var _watch_mem_pool_count : int
 var _watch_mem_pool_count_last : int
 var _watch_mem_pool_target : int
 func _process(delta):
+	var current_table_size = data.fields.size() * data.records.size()
+	if _cell_backup.size() != current_table_size:
+		_refresh_cell_backup(current_table_size)
+
+	if _debug_update_cell_value_count_inframe > 0:
+		print("update cells in frame: %s" % _debug_update_cell_value_count_inframe)
+		_debug_update_cell_value_count_inframe = 0
+	if _debug_cell_backup_hit > 0:
+		print("cell backup hit in frame: %s" % _debug_cell_backup_hit)
+		_debug_cell_backup_hit = 0
+
 	# Watch memory
 	if _watch_mem_interval >= 0:
 		_watch_mem_interval -= delta
@@ -287,7 +359,8 @@ func _open_cell_edit(row: int, column: int):
 			for o in fieldinfo.toption_options: editor.add_item(o)
 			editor.on_value_changed.connect(func(value):
 				data.records[row][column] = value
-				_update_cell_value(cell_control, column, row, value)
+				_remove_cell_backup(row, column)
+				#_update_cell_value(cell_control, column, row, value)
 			)
 			editor.on_exit_code.connect(func(code:CellValueEditorStatic.ExitCode):
 				var rn :int = row
@@ -315,7 +388,8 @@ func _open_cell_edit(row: int, column: int):
 			editor.text = "%s" % celldata if celldata != null else ""
 			editor.text_changed.connect(func(text:String):
 				data.records[row][column] = text
-				_update_cell_value(cell_control, column, row, text)
+				_remove_cell_backup(row, column)
+				#_update_cell_value(cell_control, column, row, text)
 			)
 			editor.on_exit_code.connect(func(code:CellValueEditorStatic.ExitCode):
 				var rn :int = row
@@ -381,12 +455,14 @@ func _convert_field_type(column: int, from_type: Main.FieldType, to_type: Main.F
 		elif to_type == Main.FieldType.STRING:
 			record[column] = plain_text
 
-	for r in range(visible_begin, visible_end):
-		var linectnr = _try_get_line_ctnr(r)
-		if linectnr != null:
-			var cellctrl = linectnr.get_child(column)
-			if cellctrl != null:
-				_update_cell_value(cellctrl, column, r, data.records[r][column])
+	_remove_cell_backup_by_column(column)
+	call_deferred("refresh")
+	#for r in range(visible_begin, visible_end):
+		#var linectnr = _try_get_line_ctnr(r)
+		#if linectnr != null:
+			#var cellctrl = linectnr.get_child(column)
+			#if cellctrl != null:
+				#_update_cell_value(cellctrl, column, r, data.records[r][column])
 
 func refresh():
 	if data == null:
@@ -480,14 +556,35 @@ func refresh():
 			_update_cell_value(cellctrl, col, r, rowdata[col])
 	grid.queue_redraw()
 
+var _debug_update_cell_value_count_inframe :int
+var _debug_cell_backup_hit :int
 func _update_cell_value(control: Control, column: int, row: int, celldata):
 	# print("update cell value of: [row: %s, column: %s]" % [column, row])
 	var fieldinfo = fields[column]
-	for c in control.get_children(): c.queue_free() # Clear the children, some complex types add children to show things, like multi-option type.
+	# Remove the children, some complex types add children to show things, like multi-option type.
+	for c in control.get_children(): control.remove_child(c)
+
+	var backup = _find_cell_backup(row, column)
+	if backup != null:
+		if backup is String:
+			control.set("text", backup)
+			_debug_cell_backup_hit += 1
+			return
+		elif backup is Node:
+			if backup.get_parent() != null:
+				backup.reparent(control, false)
+			else:
+				control.add_child(backup)
+			_debug_cell_backup_hit += 1
+			return
+		else:
+			print("unknown cell backup type: %s" % backup)
 
 	if fieldinfo.type == Main.FieldType.STRING:
-		control.set("text", celldata if celldata is String else "")
-		control.add_theme_color_override("font_color", Color.BLACK)
+		var value :String= celldata if celldata is String else ""
+		control.set("text", value)
+		# control.add_theme_color_override("font_color", Color.BLACK)
+		_upload_cell_backup(row, column, value)
 	elif fieldinfo.type == Main.FieldType.NUMBER:
 		var data :String= celldata if celldata is String else ""
 		if data == "":
@@ -499,8 +596,10 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 				(is_int && data.is_valid_int()) || \
 				(is_float && data.is_valid_float())
 			if type_match:
-				control.set("text", data.to_int() if is_int else (data.to_float() if is_float else "Unknown Number Type"))
-				control.add_theme_color_override("font_color", Color.DARK_GREEN)
+				var value :String= data.to_int() if is_int else (data.to_float() if is_float else "Unknown Number Type")
+				control.set("text", value)
+				# control.add_theme_color_override("font_color", Color.DARK_GREEN)
+				_upload_cell_backup(row, column, value)
 	elif fieldinfo.type == Main.FieldType.OPTION:
 		var valid = true
 		if celldata is not Array[int]:
@@ -526,6 +625,7 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 				lb.set_deferred("color", Color.from_hsv(h, 0.7, 0.6))
 				ctnr.add_child(lb)
 			control.set("text", "")
+			_upload_cell_backup(row, column, scroll_ctnr)
 		#else:
 			#control.set("text", "???(%s)" % celldata)
 			#control.add_theme_color_override("font_color", Color(1,0,0,0.2))
@@ -542,17 +642,19 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 			if process_func > -1:
 				var result = script.call("process_value", "" if celldata == null || typeof(celldata) != TYPE_STRING else celldata)
 				control.set("text", result)
-				control.add_theme_color_override("font_color", Color.DARK_CYAN)
+				# control.add_theme_color_override("font_color", Color.DARK_CYAN)
 				ok = true
+				_upload_cell_backup(row, column, result)
 		else:
 			print("Script compile error: %s" % err)
 
 		if not ok:
 			control.set("text", celldata)
-			control.add_theme_color_override("font_color", Color.DARK_CYAN)
+			# control.add_theme_color_override("font_color", Color.DARK_CYAN)
 	else:
 		control.set("text", celldata)
-		control.add_theme_color_override("font_color", Color.BLACK)
+		# control.add_theme_color_override("font_color", Color.BLACK)
+	_debug_update_cell_value_count_inframe += 1
 
 # You can always call this after either creating a cellctrl or getting from a pool 
 func _initialize_cellctrl(cellctrl: Label):
