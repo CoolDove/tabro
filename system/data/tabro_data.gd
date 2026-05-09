@@ -44,7 +44,7 @@ static func serialize(data: TabroData) -> String:
 	save["version"] = Version.VLATEST
 	var body : Dictionary
 	save["body"] = body
-	# Nerver change above
+	# Never change above
 	var dfields = []
 	for field in data.fields:
 		var dict : Dictionary
@@ -54,9 +54,9 @@ static func serialize(data: TabroData) -> String:
 				dict[pname] = field.get(pname)
 		dfields.append(dict)
 	body["fields"] = dfields
-	var drecords : Array[PackedStringArray]
+	var drecords : Array[Array]
 	for record in data.records:
-		var row : PackedStringArray
+		var row : Array
 		for cell in record:
 			row.append(cell)
 		drecords.append(row)

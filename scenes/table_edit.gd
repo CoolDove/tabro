@@ -601,7 +601,7 @@ func _update_cell_value(control: Control, column: int, row: int, celldata):
 				(is_int && data.is_valid_int()) || \
 				(is_float && data.is_valid_float())
 			if type_match:
-				var value :String= data.to_int() if is_int else (data.to_float() if is_float else "Unknown Number Type")
+				var value :String= "%s" % data.to_int() if is_int else (data.to_float() if is_float else "Unknown Number Type")
 				control.set("text", value)
 				# control.add_theme_color_override("font_color", Color.DARK_GREEN)
 				_upload_cell_backup(row, column, value)
