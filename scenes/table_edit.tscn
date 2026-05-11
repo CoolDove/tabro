@@ -46,6 +46,7 @@ grow_vertical = 2
 theme_override_constants/separation = 0
 
 [node name="TitleScroller" type="ScrollContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
 clip_contents = false
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
@@ -57,17 +58,20 @@ vertical_scroll_mode = 0
 metadata/_edit_group_ = true
 
 [node name="TitleLine" type="HBoxContainer" parent="VBoxContainer/TitleScroller"]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 vertical_scroll_mode = 4
 
 [node name="Grid" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 0

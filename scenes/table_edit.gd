@@ -3,10 +3,10 @@ class_name TableEdit
 
 var FieldLabelScn = preload("res://scenes/table_field_label.tscn")
 
-@onready var titlescroller = $VBoxContainer/TitleScroller
-@onready var titleline = $VBoxContainer/TitleScroller/TitleLine
-@onready var gridscroller = $VBoxContainer/ScrollContainer
-@onready var grid = $VBoxContainer/ScrollContainer/Grid
+@onready var titlescroller = %TitleScroller
+@onready var titleline = %TitleLine
+@onready var gridscroller = %ScrollContainer
+@onready var grid = %Grid
 
 var cell_value_edit : CellValueEdit
 
@@ -19,6 +19,7 @@ var data :TabroData:
 		call_deferred("refresh")
 var _data : TabroData
 
+var gutter_width :int= 46
 var cell_height = 32.0
 var fields :
 	get:
@@ -135,6 +136,10 @@ func is_cell_in_table_range(row:int, column:int):
 
 func _ready():
 	# Add a little block to fit the scroll bar width in body scroll container.
+	var gutter_spacing = Control.new()
+	titleline.add_child(gutter_spacing, false, INTERNAL_MODE_FRONT)
+	gutter_spacing.custom_minimum_size.x = gutter_width
+
 	var spacing = Control.new()
 	titleline.add_child(spacing, false, INTERNAL_MODE_BACK)
 	spacing.custom_minimum_size.x = gridscroller.get_h_scroll_bar().size.x
@@ -190,6 +195,7 @@ func _ready():
 			return
 		var grid_size = grid.size
 		var grid_color = Color.BLACK
+
 		grid.draw_line(Vector2(0,0), Vector2(grid_size.x, 0), grid_color)
 		for i in range(visible_begin, min(visible_end, data.records.size())):
 			var y = (i + 1) * cell_height
@@ -197,13 +203,13 @@ func _ready():
 		var x = 0
 		var bottom = min(grid_size.y, data.records.size() * cell_height)
 		var draw_hover_cell = null
-		grid.draw_line(Vector2(x, 0), Vector2(x, bottom), grid_color)
+		grid.draw_line(Vector2(x + gutter_width, 0), Vector2(x + gutter_width, bottom), grid_color)
 		for fidx in range(0, fields.size()):
 			var f = fields[fidx]
 			if is_hover_cell_valid and hover_cell.x == fidx:
-				draw_hover_cell = Rect2(Vector2(x, hover_cell.y * cell_height), Vector2(f.width, cell_height));
+				draw_hover_cell = Rect2(Vector2(x + gutter_width, hover_cell.y * cell_height), Vector2(f.width, cell_height));
 			x += f.width
-			grid.draw_line(Vector2(x, 0), Vector2(x, bottom), grid_color)
+			grid.draw_line(Vector2(x + gutter_width, 0), Vector2(x + gutter_width, bottom), grid_color)
 		if select_region.position.x >= 0 && select_region.position.y >= 0:
 			# draw the select region
 			var p = select_region.position
@@ -216,7 +222,9 @@ func _ready():
 			for i in range(p.x, p.x+s.x+1):
 				var w = fields[i].width
 				width += w
-			var select_rect = Rect2i(xmin, p.y*cell_height, width, (s.y + 1)*cell_height)
+			var select_rect = Rect2i(\
+				Vector2i(Vector2(xmin + gutter_width, p.y*cell_height)),\
+				Vector2i(width, (s.y + 1)*cell_height))
 			grid.draw_rect(select_rect, Color(0x22afa222), true)
 			grid.draw_rect(select_rect, Color(0x22afa255), false, 2)
 
@@ -311,6 +319,7 @@ func _process(delta):
 
 func _update_hover():
 	var grid_mpos = gridscroller.get_local_mouse_position()
+	grid_mpos.x -= gutter_width
 	var new_hover_cell
 	var is_outside = grid_mpos.x < 0 or grid_mpos.y < 0 or grid_mpos.x > gridscroller.size.x or grid_mpos.y > gridscroller.size.y
 	if is_outside: # or cell_value_edit != null:
@@ -539,6 +548,11 @@ func refresh():
 		var line = HBoxContainer.new()
 		line.add_theme_constant_override("separation", 0)
 		grid.add_child(line)
+		var gutter :Label= Label.new()
+		line.add_child(gutter, false, Node.INTERNAL_MODE_FRONT)
+		gutter.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		gutter.custom_minimum_size.x = gutter_width
+		gutter.add_theme_color_override("font_color", Color.DARK_GRAY)
 	for i in range(0, grid.get_child_count() - visible_record_count):
 		_recycle_free_line(grid.get_child(-1))
 
@@ -552,6 +566,8 @@ func refresh():
 	for r in range(visible_begin, visible_record_count + visible_begin):
 		var rowdata = data.records[r]
 		var linectnr = grid.get_child(r - visible_begin)
+		var gutter :Label= linectnr.get_child(0, true)
+		gutter.text = "%s" % r
 		for col in range(0, fields_count):
 			var cellctrl = linectnr.get_child(col)
 			# Set cell edit
