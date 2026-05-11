@@ -277,6 +277,11 @@ func _gui_input(event):
 							_update_select(Rect2i(hover_cell, Vector2i.ZERO))
 						else:
 							_open_cell_edit(hover_cell.y, hover_cell.x)
+				MOUSE_BUTTON_RIGHT:
+					_update_hover()
+					if is_hover_cell_valid:
+						# open context menu on cell
+						pass
 		_update_hover()
 
 var _watch_mem_interval : float

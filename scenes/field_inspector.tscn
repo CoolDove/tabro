@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://dl33f2qmifdj6"]
+[gd_scene load_steps=8 format=3 uid="uid://dl33f2qmifdj6"]
 
 [ext_resource type="FontFile" uid="uid://bnjf2s4sluuwq" path="res://resources/fonts/FiraCode-Medium.ttf" id="1_vriwu"]
 
@@ -74,6 +74,7 @@ func _on_tab_open(tab_index: int):
 			_init_panel_number()
 		_:
 			print(\"Fallback tab open\")
+	%AnimationPlayer.play(\"on_open\")
 
 func _on_select_field_type(idx: int):
 	_set_option_type(idx)
@@ -148,6 +149,43 @@ keyword_colors = {
 "self": Color(0.41926342, 0.1613614, 0.05003371, 1),
 "static": Color(0, 0, 0, 1),
 "var": Color(0.80732226, 0.2382367, 0.91163254, 1)
+}
+
+[sub_resource type="Animation" id="Animation_vriwu"]
+resource_name = "on_open"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VBoxContainer/Title/FieldName:visible_ratio")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.2),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 1.0]
+}
+
+[sub_resource type="Animation" id="Animation_3mhup"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("VBoxContainer/Title/FieldName:visible_ratio")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [1.0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_3mhup"]
+_data = {
+&"RESET": SubResource("Animation_3mhup"),
+&"on_open": SubResource("Animation_vriwu")
 }
 
 [node name="FieldInspector" type="Control"]
@@ -290,3 +328,9 @@ metadata/_tab_index = 4
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+unique_name_in_owner = true
+libraries = {
+&"": SubResource("AnimationLibrary_3mhup")
+}
